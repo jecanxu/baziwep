@@ -62,7 +62,7 @@
   .field{margin-bottom:14px}
   .field:last-child{margin-bottom:0}
   .field > label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:6px;letter-spacing:.5px}
-  input[type=text],input[type=date],input[type=time],input[type=number]{
+  input[type=text],input[type=time],input[type=number]{
     width:100%;height:44px;padding:0 12px;border:1px solid var(--line);
     border-radius:10px;background:#fbfbfd;color:var(--text);font-size:15px;
     font-family:inherit;outline:none;transition:.18s;
@@ -70,6 +70,7 @@
   input:focus{border-color:#b9aef0;background:#fff;box-shadow:0 0 0 3px rgba(109,91,208,.10)}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .areaStack{display:grid;gap:8px}
+  .dateStack{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:8px}
 
   select{
     width:100%;height:44px;padding:0 30px 0 12px;border:1px solid var(--line);
@@ -160,6 +161,16 @@
   .flag{font-size:11.5px;padding:3px 9px;border-radius:20px;border:1px solid var(--line);color:var(--sub);background:#fafbfd}
   .flag.on{color:#5a48b8;border-color:#d5cdf7;background:var(--brand-soft)}
 
+  /* 旺衰评分明细 */
+  .wsgrid{display:grid;grid-template-columns:1fr 46px 46px 54px;gap:4px 8px;align-items:baseline;font-size:12.5px;margin-top:12px}
+  .wsgrid .h{font-size:11.5px;color:var(--sub2);letter-spacing:.5px}
+  .wsgrid .n{text-align:right;color:var(--sub2);font-variant-numeric:tabular-nums}
+  .wsgrid .s{text-align:right;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+  .wsgrid .it{color:var(--sub)}
+  .wsgrid .it b{color:var(--text);font-weight:600}
+  .wsgrid .wnote{grid-column:1/-1;font-size:11.5px;color:var(--sub2);line-height:1.5;margin:0 0 6px}
+  .wsgrid .sum{border-top:1px solid var(--line);padding-top:8px}
+
   .chips{display:flex;flex-wrap:wrap;gap:7px}
   .chip{font-size:12.5px;padding:5px 11px;border-radius:9px;border:1px solid var(--line);background:#fafbfd;color:var(--sub)}
   .chip b{font-weight:700;color:var(--text);margin-right:3px}
@@ -190,6 +201,9 @@
   .advice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
   .advice div{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fcfcfe;font-size:12px;color:var(--sub);line-height:1.6}
   .advice div b{display:block;color:var(--text);font-size:12px;margin-bottom:2px;font-weight:600}
+  .finalBox{border:1px solid #ded9f8;background:var(--brand-soft);border-radius:12px;padding:16px 18px;margin-top:4px}
+  .finalBox p{margin:0;font-size:14.5px;line-height:2;color:var(--text)}
+  .finalBox p:empty{display:none}
 
   footer{text-align:center;font-size:11.5px;color:var(--sub2);line-height:1.8;padding:8px 10px 0}
   .err{background:#fdf3f1;border:1px solid #f0cdc7;color:#a8352a;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
@@ -224,8 +238,12 @@
     </div>
 
     <div class="field">
-      <label>公历出生日期</label>
-      <input type="date" id="birthDate" value="1990-06-15">
+      <label>公历出生日期（年 / 月 / 日）</label>
+      <div class="dateStack">
+        <select id="birthYear" aria-label="出生年份"></select>
+        <select id="birthMonth" aria-label="出生月份"></select>
+        <select id="birthDay" aria-label="出生日期"></select>
+      </div>
     </div>
 
     <div class="field">
@@ -281,6 +299,13 @@
     </section>
 
     <section class="card">
+      <h2>月令取格</h2>
+      <div class="verdict" id="gejuBox"></div>
+      <div class="chips" id="gejuChips" style="margin-top:10px"></div>
+      <div class="hint" id="gejuNote"></div>
+    </section>
+
+    <section class="card">
       <h2>五行力量分布</h2>
       <div id="wxBars"></div>
       <div class="hint" id="wxNote"></div>
@@ -293,6 +318,13 @@
       <div class="scale"><span>极弱</span><span>中和</span><span>极强</span></div>
       <div class="flags" id="flags"></div>
       <div class="hint" id="scoreNote"></div>
+    </section>
+
+    <section class="card">
+      <h2>旺衰评分</h2>
+      <div class="verdict" id="wsVerdict"></div>
+      <div id="wsTable"></div>
+      <div class="hint" id="wsNote"></div>
     </section>
 
     <section class="card">
@@ -317,11 +349,41 @@
         <div class="hint" style="margin:0 0 8px">十神力量分布</div>
         <div class="chips" id="ssChips"></div>
       </div>
-      <div class="hint" id="tiaohou"></div>
+    </section>
+
+    <section class="card">
+      <h2>调候</h2>
+      <div class="verdict" id="tiaoVerdict"></div>
+      <div class="chips" id="tiaoChips" style="margin-top:10px"></div>
+      <div class="hint" style="margin:14px 0 8px">本日干十二月的调候用神（当前月支高亮）</div>
+      <div class="chips" id="tiaoRow"></div>
+      <div class="hint" id="tiaoTip"></div>
+    </section>
+
+    <section class="card">
+      <h2>病药</h2>
+      <div class="verdict" id="bingVerdict"></div>
+      <div id="bingList"></div>
+      <div class="hint" id="bingTip"></div>
+    </section>
+
+    <section class="card">
+      <h2>通关</h2>
+      <div class="verdict" id="tongVerdict"></div>
+      <div id="tongList"></div>
+      <div class="hint" id="tongTip"></div>
+    </section>
+
+    <section class="card">
+      <h2>综合裁决</h2>
+      <div class="verdict" id="zhVerdict"></div>
+      <div id="zhList"></div>
+      <div class="hint" id="zhTip"></div>
     </section>
 
     <section class="card summary">
       <h2>综合总结</h2>
+      <div class="finalBox" id="finalBox"></div>
       <div id="summaryBox"></div>
       <div class="advice" id="adviceBox"></div>
     </section>
@@ -492,17 +554,858 @@
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
+  /* ===================== 月令取格 =====================
+     规则：
+       1. 取月支藏干，按本气、中气、余气排列；
+       2. 检查每个藏干是否透出天干（年干、月干、时干 —— 日干为日主本身，不作透出论）；
+       3. 透出者中按 本气 > 中气 > 余气 排序，取第一个非比劫者为格；
+       4. 透出的是比劫则跳过，继续往下一个取；
+       5. 都不透则退取本气；本气为比劫即论建禄格 / 月劫格。 */
+  var GE_RANK = ['本气', '中气', '余气'];
+  var IS_BIJIE = { '比肩': 1, '劫财': 1 };
+
+  function geJuOf(dayGan, monthZhi, cols) {
+    var hides = HIDE[monthZhi] || [];
+    if (!hides.length) return null;
+
+    var dayWx = GAN_WX[dayGan];
+    var touch = [cols[0].gan, cols[1].gan, cols[3].gan];
+    var posName = ['年干', '月干', '时干'];
+    var touAt = {};
+    touch.forEach(function (g, i) { (touAt[g] = touAt[g] || []).push(posName[i]); });
+
+    var items = hides.map(function (h, i) {
+      return {
+        gan: h,
+        rank: GE_RANK[i] || ('第' + (i + 1) + '气'),
+        ss: shiShen(dayGan, h),
+        wx: GAN_WX[h],
+        tou: !!touAt[h],
+        touPos: (touAt[h] || []).join('、')
+      };
+    });
+
+    var hideDesc = items.map(function (it) {
+      return it.gan + '（' + it.rank + '·' + it.ss + '·' + (it.tou ? '透' + it.touPos : '不透') + '）';
+    }).join('、');
+
+    // 规则 3、4：按 本气 → 中气 → 余气 找第一个「透出且非比劫」的藏干
+    var picked = null, skipped = [];
+    for (var i = 0; i < items.length; i++) {
+      if (!items[i].tou) continue;
+      if (IS_BIJIE[items[i].ss]) { skipped.push(items[i]); continue; }
+      picked = items[i];
+      break;
+    }
+    var skipDesc = skipped.map(function (s) { return s.gan + '（' + s.ss + '）'; }).join('、');
+
+    var name, basis, short;
+
+    if (picked) {
+      name = picked.ss + '格';
+      short = '月支「' + monthZhi + '」' + picked.rank + picked.gan + picked.wx + '透' + picked.touPos;
+      basis = '月支「' + monthZhi + '」藏干：' + hideDesc + '。' +
+        (skipDesc ? '其中 ' + skipDesc + ' 虽透天干，然属比劫，依「比劫跳过」舍之不取；' : '') +
+        '取 ' + picked.gan + '（' + picked.rank + '·' + picked.ss + '）为格 —— ' +
+        picked.gan + picked.wx + ' 对日主 ' + dayGan + dayWx + ' 为' + picked.ss + '，故为' + name + '。';
+    } else {
+      // 规则 5：都不透，退取本气
+      var ben = items[0];
+      if (ben.ss === '比肩') {
+        name = '建禄格';
+        short = '月支「' + monthZhi + '」本气为日主之禄';
+        basis = '月支「' + monthZhi + '」藏干：' + hideDesc + '。' +
+          (skipDesc ? '所透 ' + skipDesc + ' 皆属比劫，舍之不取；' : '三干之中未见月支藏干透出，') +
+          '故退取本气 ' + ben.gan + '。' + ben.gan + ' 即日主 ' + dayGan + ' 之禄（比肩），月令得禄，' +
+          '不以禄论而以「建禄」名之，故为建禄格。';
+      } else if (ben.ss === '劫财') {
+        name = '月劫格';
+        short = '月支「' + monthZhi + '」本气为日主之劫财（刃）';
+        basis = '月支「' + monthZhi + '」藏干：' + hideDesc + '。' +
+          (skipDesc ? '所透 ' + skipDesc + ' 皆属比劫，舍之不取；' : '三干之中未见月支藏干透出，') +
+          '故退取本气 ' + ben.gan + '。' + ben.gan + ben.wx + ' 为日主 ' + dayGan + dayWx + ' 之劫财，' +
+          '即月令之刃，故论月劫格（亦称阳刃格）。';
+      } else {
+        name = ben.ss + '格';
+        short = '月支「' + monthZhi + '」藏干不透，退取本气';
+        basis = '月支「' + monthZhi + '」藏干：' + hideDesc + '。' +
+          (skipDesc ? '所透 ' + skipDesc + ' 皆属比劫，舍之不取；' : '') +
+          '月支藏干皆未透出天干，依「不透则取本气」退取本气 ' + ben.gan + '（' + ben.ss + '）为格，故为' + name + '。';
+      }
+    }
+
+    return { name: name, basis: basis, short: short, items: items, picked: picked, skipped: skipped };
+  }
+
+  /* ===================== 旺衰评分（百分制） =====================
+     基础分：得令 40；得地 本气根 25 / 中气根 15 / 余气根 8；得生 15；得助 15
+     修正：月支被冲 → 得令 ×0.5；日支被冲 → 得地 ×0.5；
+           天干生扶被克 → 得生 / 得助 ×0.5；
+           生扶距离：紧贴（月干、时干）×1.0、隔干（年干）×0.7、远干 ×0.4（留给大运流年）
+     判定：> 65 身强 / 45–65 中和 / < 45 身弱；特殊：从强、从弱
+     说明：得地只计「日主同类（比劫）」的藏干根 —— 月支已归「得令」，不重复计；
+           印根不计入得地，印只从天干以「得生」体现。 */
+  var WS_LING = 40;                    // 得令
+  var WS_ROOT = [25, 15, 8];           // 得地：本气 / 中气 / 余气
+  var WS_SHENG = 15, WS_ZHU = 15;      // 得生（印）/ 得助（比劫）
+  var WS_F_TIGHT = 1.0, WS_F_GAP = 0.7, WS_F_FAR = 0.4;
+  var WS_F_CHONG = 0.5, WS_F_KE = 0.5;
+  var WS_STRONG = 65, WS_WEAK = 45;    // >65 身强；45–65 中和；<45 身弱
+  var WS_CONG_STRONG = 85, WS_CONG_WEAK = 15;   // 特殊格阈值（待定，可调）
+
+  function isChong(a, b) { return Math.abs(ZHI_IDX[a] - ZHI_IDX[b]) === 6; }
+
+  function wangShuaiScore(dayGan, dayWx, cols) {
+    var monthZhi = cols[1].zhi, monthWx = ZHI_WX[monthZhi];
+    var rows = [];
+
+    /* --- 1. 得令 --- */
+    var lingOK = (monthWx === dayWx || SHENG[monthWx] === dayWx);
+    var chongMonthBy = [];
+    [0, 2, 3].forEach(function (i) {
+      if (isChong(cols[i].zhi, monthZhi)) chongMonthBy.push(cols[i].name + cols[i].zhi);
+    });
+    var lingWhy = lingOK
+      ? '月令' + monthZhi + '本气属' + monthWx + '，' + (monthWx === dayWx ? '与日主同类，比劫当权' : '生扶日主，印星生身') + '，得令'
+      : '月令' + monthZhi + '本气属' + monthWx + '，既非比劫亦非印星，失令';
+    var lingF = 1;
+    if (chongMonthBy.length) {
+      lingF = WS_F_CHONG;
+      lingWhy += '；月支被 ' + chongMonthBy.join('、') + ' 冲，得令分 ×' + WS_F_CHONG;
+    }
+    rows.push({ item: '得令', base: lingOK ? WS_LING : 0, factor: lingF, note: lingWhy });
+
+    /* --- 2. 得地（只计日主同类的藏干根） --- */
+    var diTotal = 0, diCount = 0;
+    [0, 2, 3].forEach(function (i) {
+      var c = cols[i];
+      (HIDE[c.zhi] || []).forEach(function (h, k) {
+        if (GAN_WX[h] !== dayWx) return;
+        var base = (WS_ROOT[k] != null) ? WS_ROOT[k] : WS_ROOT[WS_ROOT.length - 1];
+        diTotal += base; diCount++;
+        rows.push({
+          item: '得地 · ' + c.name.charAt(0) + '支' + c.zhi, base: base, factor: 1,
+          note: '藏干 ' + h + '（' + (GE_RANK[k] || '') + '·' + dayWx + '）为日主同类之根'
+        });
+      });
+    });
+    if (!diCount) {
+      rows.push({ item: '得地', base: 0, factor: 1, note: '年支、日支、时支藏干中不见日主同类之根，不得地' });
+    }
+    var chongDayBy = [];
+    [0, 1, 3].forEach(function (i) {
+      if (isChong(cols[i].zhi, cols[2].zhi)) chongDayBy.push(cols[i].name + cols[i].zhi);
+    });
+    if (chongDayBy.length && diTotal > 0) {
+      rows.push({
+        item: '得地折损', base: diTotal, factor: -WS_F_CHONG,
+        note: '日支' + cols[2].zhi + '被 ' + chongDayBy.join('、') + ' 冲，得地分 ×' + WS_F_CHONG
+      });
+    }
+
+    /* --- 3. 得生 / 得助（天干生扶，按距离与受克折算；同类取最有利的一个） --- */
+    function bestHelper(kind) {
+      var best = null;
+      [0, 1, 3].forEach(function (i) {
+        var c = cols[i], ss = shiShen(dayGan, c.gan);
+        if (SHISHEN_CAT[ss] !== kind) return;
+        var posF = (i === 1 || i === 3) ? WS_F_TIGHT : WS_F_GAP;   // 月干、时干紧贴日主
+        var keBy = [];
+        [0, 1, 2, 3].forEach(function (j) {
+          if (j === i) return;
+          if (KE[GAN_WX[cols[j].gan]] === GAN_WX[c.gan]) keBy.push(cols[j].name.charAt(0) + '干' + cols[j].gan);
+        });
+        var f = posF * (keBy.length ? WS_F_KE : 1);
+        var rec = { i: i, name: c.name, gan: c.gan, ss: ss, posF: posF, keBy: keBy, factor: f };
+        if (!best || f > best.factor) best = rec;
+      });
+      return best;
+    }
+    function addHelperRow(kind, itemName, emptyNote) {
+      var h = bestHelper(kind);
+      if (!h) { rows.push({ item: itemName, base: 0, factor: 1, note: emptyNote }); return; }
+      var distName = (h.i === 1 || h.i === 3) ? '紧贴日主' : '隔干';
+      var why = h.name.charAt(0) + '干' + h.gan + '（' + h.ss + '）为' + (kind === '印星' ? '生我之印' : '同类之比劫') +
+        '，' + distName + ' ×' + h.posF.toFixed(1);
+      if (h.keBy.length) why += '；然被 ' + h.keBy.join('、') + ' 所克，再 ×' + WS_F_KE;
+      rows.push({ item: itemName, base: kind === '印星' ? WS_SHENG : WS_ZHU, factor: h.factor, note: why });
+    }
+    addHelperRow('印星', '得生', '天干（年干、月干、时干）不见印星，不得生');
+    addHelperRow('比劫', '得助', '天干（年干、月干、时干）不见比劫，不得助');
+
+    /* --- 4. 合计与判定 --- */
+    var total = 0;
+    rows.forEach(function (r) { total += r.base * r.factor; });
+
+    var baseVerdict = total > WS_STRONG ? '身强' : (total >= WS_WEAK ? '中和' : '身弱');
+    var special = total >= WS_CONG_STRONG ? '从强' : (total <= WS_CONG_WEAK ? '从弱' : '');
+    var verdict = special || baseVerdict;
+    var color = special ? '#7a3fa8'
+      : (baseVerdict === '身强' ? '#c2601c' : baseVerdict === '中和' ? '#5a6675' : '#2b6cb0');
+
+    return { total: total, verdict: verdict, baseVerdict: baseVerdict, special: special, color: color, rows: rows };
+  }
+
+  /* ===================== 调候（日干 × 月支） =====================
+     以月令寒暖燥湿为主、参日干五行定辅的简化模型：
+       · 冬月（亥／子／丑）天寒地冻 → 取火暖局；丑为湿土，火日、土日兼取木（木疏湿土兼生火）
+       · 夏月（巳／午／未）火炎土燥 → 取水润局
+       · 春月（寅／卯／辰）木旺而余寒未退 → 取火；水日主生寅卯，兼取土制水培木
+       · 秋月（申／酉／戌）金旺而燥 → 取水；木日主生申酉，兼取火制金
+     急迫度：亥子丑／巳午未 → 高；寅卯申酉 → 中；辰戌 → 低
+     每格即该日干在该月支的调候用神（五行），可按师门口径直接订正。 */
+  var TIAO_TABLE = {
+    '甲': { '寅': '火',   '卯': '火',   '辰': '火',   '巳': '水', '午': '水', '未': '水', '申': '火水', '酉': '火水', '戌': '水',   '亥': '火土', '子': '火土', '丑': '火'   },
+    '乙': { '寅': '火',   '卯': '火',   '辰': '火',   '巳': '水', '午': '水', '未': '水', '申': '火水', '酉': '火水', '戌': '水',   '亥': '火土', '子': '火土', '丑': '火'   },
+    '丙': { '寅': '火',   '卯': '火',   '辰': '木火', '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '水',   '戌': '水木', '亥': '火',   '子': '火',   '丑': '木火' },
+    '丁': { '寅': '火',   '卯': '火',   '辰': '木火', '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '水',   '戌': '水木', '亥': '火',   '子': '火',   '丑': '木火' },
+    '戊': { '寅': '火',   '卯': '火',   '辰': '木火', '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '水',   '戌': '水木', '亥': '火',   '子': '火',   '丑': '木火' },
+    '己': { '寅': '火',   '卯': '火',   '辰': '木火', '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '水',   '戌': '水木', '亥': '火',   '子': '火',   '丑': '木火' },
+    '庚': { '寅': '火',   '卯': '火',   '辰': '火',   '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '火水', '戌': '水',   '亥': '火',   '子': '火',   '丑': '火'   },
+    '辛': { '寅': '火',   '卯': '火',   '辰': '火',   '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '火水', '戌': '水',   '亥': '火',   '子': '火',   '丑': '火'   },
+    '壬': { '寅': '火土', '卯': '火土', '辰': '火',   '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '水',   '戌': '水',   '亥': '火',   '子': '火',   '丑': '火'   },
+    '癸': { '寅': '火土', '卯': '火土', '辰': '火',   '巳': '水', '午': '水', '未': '水', '申': '水',   '酉': '水',   '戌': '水',   '亥': '火',   '子': '火',   '丑': '火'   }
+  };
+  var TIAO_ZHI = ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'];
+  var TIAO_URG = {
+    '亥': '高', '子': '高', '丑': '高', '巳': '高', '午': '高', '未': '高',
+    '寅': '中', '卯': '中', '申': '中', '酉': '中',
+    '辰': '低', '戌': '低'
+  };
+  var TIAO_SEASON = {
+    '寅': '初春', '卯': '仲春', '辰': '暮春', '巳': '初夏', '午': '仲夏', '未': '暮夏',
+    '申': '初秋', '酉': '仲秋', '戌': '暮秋', '亥': '初冬', '子': '仲冬', '丑': '暮冬'
+  };
+  var TIAO_URG_DESC = {
+    '高': '寒暖偏极，调候最为急迫，优先级最高，取用先看调候。',
+    '中': '寒暖有偏而未至极，调候次之，与扶抑同参。',
+    '低': '寒暖适中，调候无迫切之需，以扶抑用神为准。'
+  };
+
+  function tiaoHouOf(dayGan, monthZhi) {
+    var row = TIAO_TABLE[dayGan] || {};
+    var shen = row[monthZhi] || '';
+    var urgency = TIAO_URG[monthZhi] || '低';
+    return {
+      gan: dayGan, zhi: monthZhi,
+      shen: shen,
+      shenArr: shen.split('').filter(function (c) { return !!c; }),
+      urgency: urgency,
+      high: urgency === '高',
+      row: row
+    };
+  }
+
+  /* ===================== 病药 =====================
+     口诀：有病方为贵，无伤不是奇；格中如去病，财禄两相随。
+     八种常见「病」，各配「药」（制病之五行）：
+       药 = 制病之源、扶受害之神（财破印、官杀制比劫、印化官杀……）。
+     阈值口径（均为「占十神总力的百分比」，五类均分时约 20%）：
+       旺 BING_Q = 30%、弱 BING_R = 12%、枭神下限 BING_XIAO = 8%、伤官下限 BING_SHANG = 15%
+     —— 取 30/12 是实测：平均每命例 0.77 病、约四成命例无病，符合「病须是明显偏枯」的定位。
+     结构性条件（枭神夺食、伤官见官、食伤制杀、官杀混杂）看的是「透干」的克制关系，不单看百分比。
+     枭神夺食额外要求「财星不透」—— 财能制枭，财若透干则病已解。 */
+  var BING_Q = 30, BING_R = 12, BING_XIAO = 8;
+  var BING_SHANG = 15;   // 伤官见官：伤官「旺」的下限
+  /* 每种病的「病根」所在十神类别 —— 供「总结生成」把药翻译成「用财制印」这类短语 */
+  var BING_SRC = {
+    '比劫夺财': '比劫', '官杀攻身': '官杀', '财多身弱': '财星', '印多坏食': '印星',
+    '枭神夺食': '印星', '伤官见官': '食伤', '食伤制杀太过': '食伤', '官杀混杂': '官杀'
+  };
+
+  function bingYaoOf(o) {
+    var dayGan = o.dayGan, catW = o.catW, ssW = o.ssW, totalW = o.totalW;
+    var CAT_WX = o.CAT_WX, level = o.level;
+    var goodSet = {}, badSet = {};
+    (o.goodWxArr || []).forEach(function (w) { goodSet[w] = 1; });
+    (o.badWxArr || []).forEach(function (w) { badSet[w] = 1; });
+
+    var CATS = ['比劫', '印星', '食伤', '财星', '官杀'];
+    var pct = {}, pss = {};
+    CATS.forEach(function (k) { pct[k] = totalW > 0 ? catW[k] / totalW * 100 : 0; });
+    Object.keys(ssW).forEach(function (s) {
+      if (s !== '日主') pss[s] = totalW > 0 ? ssW[s] / totalW * 100 : 0;
+    });
+
+    // 天干透出：十神 → [{gan, pos}]
+    var tou = {}, touInfo = {};
+    o.cols.forEach(function (c) {
+      if (c.key === 'day') return;
+      var s = shiShen(dayGan, c.gan);
+      var pos = c.name.charAt(0) + '干';
+      tou[s] = true;
+      (touInfo[s] = touInfo[s] || []).push({ gan: c.gan, pos: pos });
+    });
+    function touDesc(s) {
+      var a = touInfo[s] || [];
+      return a.map(function (x) { return x.gan + '在' + x.pos; }).join('、');
+    }
+
+    var p1 = function (n) { return n.toFixed(1) + '%'; };
+    var shenRuo = (level === 'weak' || level === 'sweak');
+    var out = [];
+
+    function push(name, yaoCat, fuCat, why, weight) {
+      fuCat = fuCat || [];
+      out.push({
+        name: name, why: why, weight: weight,
+        srcCat: BING_SRC[name] || '',
+        yaoCat: yaoCat, fuCat: fuCat,
+        yao: yaoCat.map(function (c) { return CAT_WX[c]; }),
+        fu: fuCat.map(function (c) { return CAT_WX[c]; })
+      });
+    }
+
+    // 1. 比劫夺财：比劫多 + 财弱
+    if (pct['比劫'] >= BING_Q && pct['财星'] < BING_R) {
+      push('比劫夺财', ['官杀'], ['食伤'],
+        '比劫 ' + p1(pct['比劫']) + '、财星仅 ' + p1(pct['财星']) + '，群比争财而财不能聚。' +
+        '药取官杀制比劫，使财不被劫夺；辅以食伤通关（比劫 → 食伤 → 财），顺势化争夺为流通。',
+        pct['比劫'] - pct['财星']);
+    }
+
+    // 2. 官杀攻身：官杀旺 + 身弱
+    if (pct['官杀'] >= BING_Q && shenRuo) {
+      push('官杀攻身', ['印星'], ['比劫'],
+        '官杀 ' + p1(pct['官杀']) + ' 而日主偏弱，克身太过。' +
+        '药取印星化官杀而转生自身，一物两用；辅以比劫帮身敌杀。',
+        pct['官杀']);
+    }
+
+    // 3. 财多身弱：财旺 + 身弱
+    if (pct['财星'] >= BING_Q && shenRuo) {
+      push('财多身弱', ['比劫'], ['印星'],
+        '财星 ' + p1(pct['财星']) + ' 而日主偏弱，身不胜财，古谓「富屋贫人」。' +
+        '药取比劫帮身夺财，先强其身方能任财；辅以印星生身。',
+        pct['财星']);
+    }
+
+    // 4. 印多坏食：印旺 + 食伤弱
+    if (pct['印星'] >= BING_Q && pct['食伤'] < BING_R) {
+      push('印多坏食', ['财星'], [],
+        '印星 ' + p1(pct['印星']) + ' 而食伤仅 ' + p1(pct['食伤']) + '，印重埋没食伤之秀气。' +
+        '药取财星破印，印去则食伤得以显用。',
+        pct['印星'] - pct['食伤']);
+    }
+
+    // 5. 枭神夺食：偏印旺 + 食神弱（结构性：偏印透干、财不透制枭）
+    var pianYin = ssW['偏印'] || 0, shiShenW = ssW['食神'] || 0;
+    var caiTou = !!(tou['正财'] || tou['偏财']);
+    if (pianYin > 0 && shiShenW > 0 && tou['偏印'] && !caiTou && pss['偏印'] >= BING_XIAO) {
+      push('枭神夺食', ['财星'], [],
+        '偏印（枭神）' + touDesc('偏印') + '，食神' + touDesc('食神') + '；' +
+        '金木相战，食神受制而失其秀气，是「枭神夺食」。' +
+        '财星不透，无以制枭，故病不解。药取财星制枭护食。',
+        pss['偏印']);
+    }
+
+    // 6. 伤官见官：伤官旺 + 正官透
+    if (pss['伤官'] >= BING_SHANG && tou['正官']) {
+      push('伤官见官', ['印星'], ['财星'],
+        '伤官 ' + p1(pss['伤官']) + '，而正官' + touDesc('正官') + ' 透出。「伤官见官，为祸百端」，伤官克官、坏了贵气。' +
+        '药取印星制伤而护官；若印星无力，则以财星通关（伤官 → 财 → 官）。',
+        pss['伤官']);
+    }
+
+    // 7. 食伤制杀太过：食伤旺 + 七杀弱
+    if (pct['食伤'] >= BING_Q && tou['七杀'] && (pss['七杀'] || 0) < BING_R) {
+      push('食伤制杀太过', ['财星'], ['印星'],
+        '食伤 ' + p1(pct['食伤']) + ' 而七杀仅 ' + p1(pss['七杀'] || 0) + '，七杀本可为用却被克制太过。' +
+        '药取财星泄食伤而转生七杀，使杀不受伤；辅以印星制食伤。',
+        pct['食伤'] - (pss['七杀'] || 0));
+    }
+
+    // 8. 官杀混杂：正官七杀同透
+    if (tou['正官'] && tou['七杀']) {
+      push('官杀混杂', [shenRuo ? '印星' : '食伤'], [shenRuo ? '比劫' : '财星'],
+        '正官' + touDesc('正官') + '、七杀' + touDesc('七杀') + ' 同透天干，格局不清。药在「取清」：' +
+        (shenRuo ? '日主偏弱，取印星化杀生身，化混杂为纯粹。'
+                 : '日主不弱，取食伤制杀留官；若天干有合，则以合去其一，合杀留官为上。'),
+        catW['官杀']);
+    }
+
+    out.sort(function (a, b) { return b.weight - a.weight; });
+    out.forEach(function (d) {
+      d.yaoInGood = d.yao.filter(function (w) { return goodSet[w]; });
+      d.yaoInBad = d.yao.filter(function (w) { return badSet[w]; });
+    });
+    return out;
+  }
+
+  /* ===================== 通关 =====================
+     两行相克、中间缺流通之神，则取「通关用神」引通双方之气，化战为生：
+       金克木 → 水　　水克火 → 木　　土克水 → 金　　火克金 → 土　　木克土 → 火
+     交战判据（三条同时成立）：
+       ① 两行在天干同时透出（年干／月干／时干）—— 战象显于天干；
+          只有一方透干者视为「伏战」，不列（日干为日主本身，不计作透出）
+       ② 两行五行力量占比都 ≥ TONG_T
+       ③ 无化解 —— 天干五合、地支六合未把其中一方合去
+     ⚠️ 相生之两行（如水生木）本已流通，不构成交战，故不在五组之内。
+     ⚠️ 「通关五行自身已旺」不作「已化解」论 —— 战象成于天干，须有神引通方解。 */
+  var TONG_T = 10;
+  var TONG_PAIRS = [
+    { ke: '金', bei: '木', tong: '水' },
+    { ke: '水', bei: '火', tong: '木' },
+    { ke: '土', bei: '水', tong: '金' },
+    { ke: '火', bei: '金', tong: '土' },
+    { ke: '木', bei: '土', tong: '火' }
+  ];
+  var GAN_WU_HE = [['甲', '己', '土'], ['乙', '庚', '金'], ['丙', '辛', '水'], ['丁', '壬', '木'], ['戊', '癸', '火']];
+  var ZHI_LIU_HE = [['子', '丑', '土'], ['寅', '亥', '木'], ['卯', '戌', '火'], ['辰', '酉', '金'], ['巳', '申', '水'], ['午', '未', '土']];
+
+  function tongGuanOf(o) {
+    var wxW = o.wxW, totalAll = o.totalAll, cols = o.cols;
+    var out = [];
+    var pctW = {};
+    WX_LIST.forEach(function (w) { pctW[w] = totalAll > 0 ? wxW[w] / totalAll * 100 : 0; });
+
+    var allGans = cols.map(function (c) { return c.gan; });
+    var zhis = cols.map(function (c) { return c.zhi; });
+    var ganWx = {};   // 五行 → 透出的天干（年／月／时）
+    cols.forEach(function (c) {
+      if (c.key === 'day') return;
+      (ganWx[GAN_WX[c.gan]] = ganWx[GAN_WX[c.gan]] || []).push(c.gan);
+    });
+
+    var p1 = function (n) { return n.toFixed(1) + '%'; };
+
+    TONG_PAIRS.forEach(function (p) {
+      var keG = ganWx[p.ke] || [], beiG = ganWx[p.bei] || [];
+      if (!keG.length || !beiG.length) return;                    // ① 双方须并透天干
+      if (pctW[p.ke] < TONG_T || pctW[p.bei] < TONG_T) return;    // ② 两行力量皆过阈值
+
+      // ③ 化解：五合 / 六合把其中一方合去
+      var he = '';
+      GAN_WU_HE.forEach(function (h) {
+        if (he) return;
+        if (allGans.indexOf(h[0]) >= 0 && allGans.indexOf(h[1]) >= 0) {
+          var hw = GAN_WX[h[0]];
+          if (hw === p.ke || hw === p.bei) he = '天干 ' + h[0] + h[1] + ' 合' + h[2] + '，' + hw + '被合去';
+        }
+      });
+      if (!he) {
+        ZHI_LIU_HE.forEach(function (h) {
+          if (he) return;
+          if (zhis.indexOf(h[0]) >= 0 && zhis.indexOf(h[1]) >= 0) {
+            var hw = ZHI_WX[h[0]];
+            if (hw === p.ke || hw === p.bei) he = '地支 ' + h[0] + h[1] + ' 合' + h[2] + '，' + hw + '被合住';
+          }
+        });
+      }
+      if (he) return;
+
+      var tongPct = pctW[p.tong];
+      var why = p.ke + '（' + keG.join('、') + ' 透干）克 ' + p.bei + '（' + beiG.join('、') + ' 透干），' +
+        '两行力量 ' + p1(pctW[p.ke]) + ' 与 ' + p1(pctW[p.bei]) + ' 皆过 ' + TONG_T + '%，' +
+        '天干并透、战象已成；中间又无合化可解。' +
+        '通关用神取 ' + p.tong + '：' + p.ke + '生' + p.tong + '、' + p.tong + '生' + p.bei +
+        '，以 ' + p.tong + ' 引通' + p.ke + p.bei + '之气，使「贪生忘克」、化战为生、两得其用。' +
+        (tongPct >= TONG_T
+          ? '　本局 ' + p.tong + ' 已占 ' + p1(tongPct) + '，通关之神有力，逢之最为应验。'
+          : '　本局 ' + p.tong + ' 仅 ' + p1(tongPct) + '，通关之神单薄，尤须借行运补足。');
+
+      out.push({
+        ke: p.ke, bei: p.bei, tong: p.tong,
+        keGans: keG, beiGans: beiG,
+        kePct: pctW[p.ke], beiPct: pctW[p.bei], tongPct: tongPct,
+        weight: Math.min(pctW[p.ke], pctW[p.bei]),
+        why: why
+      });
+    });
+
+    out.sort(function (a, b) { return b.weight - a.weight; });
+    out.forEach(function (d) {
+      d.tongInGood = (o.goodWxArr || []).indexOf(d.tong) >= 0;
+      d.tongInBad = (o.badWxArr || []).indexOf(d.tong) >= 0;
+    });
+    return out;
+  }
+
+  /* ===================== 格局用神 =====================
+     由「月令取格」所得格局，再按日主强弱定其所需：
+       食伤格：身强 → 财（食伤生财，秀气流行）｜身弱 → 印（制食伤而生身）
+       官杀格：身强 → 官杀（身杀两停，任其管制）｜身弱 → 印（化官杀而生身）
+       财　格：身强 → 财（身财两停）｜身弱 → 比劫（帮身任财）
+       印　格：身强 → 财（印重身滞，财星破印）｜身弱 → 印（生身）
+       禄劫格：身强 → 官杀（制禄劫）｜身弱 → 比劫（帮身）
+     中和（mid）归入身强一侧查表。 */
+  function geJuYongOf(geJuName, level, catWx) {
+    if (!geJuName) return null;
+    var cat = '';
+    if (geJuName.indexOf('食神') >= 0 || geJuName.indexOf('伤官') >= 0) cat = '食伤';
+    else if (geJuName.indexOf('正官') >= 0 || geJuName.indexOf('七杀') >= 0) cat = '官杀';
+    else if (geJuName.indexOf('正财') >= 0 || geJuName.indexOf('偏财') >= 0) cat = '财';
+    else if (geJuName.indexOf('正印') >= 0 || geJuName.indexOf('偏印') >= 0) cat = '印';
+    else if (geJuName.indexOf('建禄') >= 0 || geJuName.indexOf('月劫') >= 0) cat = '禄劫';
+    if (!cat) return null;
+    var qiang = (level === 'strong' || level === 'sstrong' || level === 'mid');
+    var pick = {
+      '食伤': { q: '财星', r: '印星' }, '官杀': { q: '官杀', r: '印星' },
+      '财':   { q: '财星', r: '比劫' }, '印':   { q: '财星', r: '印星' },
+      '禄劫': { q: '官杀', r: '比劫' }
+    }[cat];
+    var reason = {
+      '食伤': qiang ? '食伤格而身强，宜食伤生财、秀气流行' : '食伤格而身弱，宜印星制食伤而生身',
+      '官杀': qiang ? '官杀格而身强，身杀两停，任其管制' : '官杀格而身弱，宜印星化官杀而生身',
+      '财':   qiang ? '财格而身强，身财两停，任其财' : '财格而身弱，宜比劫帮身任财',
+      '印':   qiang ? '印格而身强，印重身滞，宜财星破印' : '印格而身弱，宜印星生身',
+      '禄劫': qiang ? '禄劫格而身强，宜官杀制身' : '禄劫格而身弱，宜比劫帮身'
+    }[cat];
+    var key = qiang ? pick.q : pick.r;
+    return { cat: cat, qiang: qiang, key: key, wx: catWx[key], reason: reason };
+  }
+
+  /* ===================== 综合裁决 =====================
+     把前面各模块得出的用神汇总打分，裁出主用神 / 喜神 / 忌神 / 仇神 / 闲神。
+       调候急迫（急迫度为高）且候选 ∈ 调候用神 → +40
+       格局需要且候选 = 格局用神              → +30
+       通关需要且候选 ∈ 通关用神              → +25（通关神自身落扶抑忌神 → 降为 +12，见下）
+       病药需要且候选 ∈ 病药（主药／辅药）    → +20
+       旺衰需要且候选 ∈ 扶抑喜用              → +15
+       扶抑忌神                              → −15  ← 见下方说明
+       一神多用（命中 ≥2 个加分来源）         → +10
+       克破主用神（候选克制基础分最高者）     → −12（只减力，不改喜忌，见下）
+     判定：最高分 → 主用神；其余正分 → 喜神；负分 → 忌神；
+           得 0 分者：生忌神 → 仇神，否则 → 闲神。
+     ⚠️ 说明：「扶抑忌神 −15」不在题给清单内，但必需 —— 题给扣分项原只有「被克破」，
+        若无此项，命例中的金（0 分）与水的正分相抵后仍非负数，判不出「金水为忌」。
+        故按扶抑喜用 +15 的对称口径补入 −15。
+     ⚠️ 「克破」解作「候选克制了本次评分中的主用神」，即破坏命局所倚者。
+     ⚠️ 两处与题给原值不同，均经用户 2026-09-17 定夺：
+        ① 通关神落扶抑忌神：**降权为 +12，不归零** —— 战象是客观矛盾，通关神再不堪
+           也仍在解战，归零等于假装这场交战不存在；降权则「不理想，却是当下唯一能解战者」
+           这一层信息仍在（实测 480 例中约 1/10 命中，其中多例若归零会无正分可判）。
+        ② 克破主用神：−20 → **−12**，且**只减力、不改喜忌**。−20 大于扶抑喜用 +15，
+           会一票否决把「金」这类食伤泄秀之喜神直接翻成忌神（480 例中 41 例），过于粗暴；
+           −12 后扶抑喜用 +15 − 12 = +3 仍为喜神，只是力量弱、不优先作主用神，
+           而扶抑忌神 −15 − 12 = −27 仍是忌神 —— 层次保留、机械翻转消除。
+        ③ 优先次序不变：调候 > 格局 > 通关 > 病药 > 扶抑。 */
+  var ZH_XI = 15, ZH_JI = 15, ZH_CHONG = -12, ZH_MULTI = 10;
+  var ZH_TONG = 25, ZH_TONG_WEAK = 12;
+
+  function zongHeOf(o) {
+    var rows = {};
+    WX_LIST.forEach(function (w) { rows[w] = { wx: w, score: 0, items: [] }; });
+    function add(w, label, v) {
+      if (!rows[w]) return;
+      rows[w].score += v;
+      rows[w].items.push({ label: label, v: v });
+    }
+
+    if (o.tiao && o.tiao.high) o.tiao.shenArr.forEach(function (w) { add(w, '调候·急迫度高', 40); });
+    if (o.geJuYong) add(o.geJuYong.wx, '格局·' + o.geJuYong.key, 30);
+    /* 通关：战象是客观矛盾，通关神再不堪也仍在解战，故**降权而不归零**。
+       通关神若自身落在扶抑忌神中，说明它不宜作主用神，但仍留其解战之权 ——
+       若归零，等于系统假装这场交战不存在，还可能因无正分可判而错取更差的字。 */
+    (o.tong || []).forEach(function (d) {
+      var inBad = (o.badWxArr || []).indexOf(d.tong) >= 0;
+      add(d.tong, '通关·' + d.ke + '×' + d.bei + (inBad ? '（通关神落扶抑忌神，降权）' : ''),
+        inBad ? ZH_TONG_WEAK : ZH_TONG);
+    });
+    (o.bing || []).forEach(function (d) {
+      var seen = {};
+      d.yao.concat(d.fu).forEach(function (w) {
+        if (seen[w]) return;
+        seen[w] = 1;
+        add(w, '病药·' + d.name, 20);
+      });
+    });
+    (o.goodWxArr || []).forEach(function (w) {
+      // 调候「权取」之神（原属扶抑忌神）不加扶抑喜用的 +15，
+      // 它的正分只来自「调候急迫」一项，免得仅靠 +40 就盖过真正的扶抑主用神。
+      if (o.tiaoOnly && o.tiaoOnly[w]) return;
+      add(w, '扶抑喜用', ZH_XI);
+    });
+    (o.badWxArr || []).forEach(function (w) { add(w, '扶抑忌神', -ZH_JI); });
+
+    // 一神多用
+    WX_LIST.forEach(function (w) {
+      var n = rows[w].items.filter(function (it) { return it.v > 0; }).length;
+      if (n >= 2) add(w, '一神多用·兼' + n + '用', ZH_MULTI);
+    });
+
+    // 克破：候选克制基础分最高者 —— 只减其力、不改其喜忌
+    //（罚分低于「扶抑喜用 +15」，故被克破的扶抑喜用仍为正分、仍是喜神，只是不宜倚为主用神）
+    var mainWx = WX_LIST[0];
+    WX_LIST.forEach(function (w) { if (rows[w].score > rows[mainWx].score) mainWx = w; });
+    WX_LIST.forEach(function (w) {
+      if (KE[w] === mainWx) add(w, '克破主用神·' + w + '克' + mainWx, ZH_CHONG);
+    });
+
+    // 归类
+    var roles = {}, ji = [];
+    roles[mainWx] = '主用神';
+    WX_LIST.forEach(function (w) {
+      if (w === mainWx) return;
+      if (rows[w].score > 0) roles[w] = '喜神';
+      else if (rows[w].score < 0) { roles[w] = '忌神'; ji.push(w); }
+    });
+    WX_LIST.forEach(function (w) {
+      if (roles[w]) return;
+      var shengJi = false;
+      ji.forEach(function (j) { if (SHENG[w] === j) shengJi = true; });
+      roles[w] = shengJi ? '仇神' : '闲神';
+    });
+
+    return {
+      main: mainWx, roles: roles,
+      list: WX_LIST.map(function (w) {
+        return { wx: w, role: roles[w], score: rows[w].score, items: rows[w].items };
+      })
+    };
+  }
+
+  /* ===================== 总结生成 =====================
+     把前面各模块的结论（扶抑 / 格局 / 病药 / 通关 / 调候 / 综合裁决）浓缩成一段「命书」式总论：
+       {日主}日主，生{月支}月，{地支合化}，{旺衰结论}。喜{喜用}，忌{忌神}。用{用神策略}。
+       人生关键在：{建议}。行{大运}时较顺，{忌神运}时宜守。婚姻、财运宜晚不宜急，合作投资需谨慎。
+     口径说明（均沿用本页已有模块，不另立标准）：
+       · {喜用} / {忌神} 直接取「综合裁决」的排序 —— 主用神 + 喜神 / 忌神，故与裁决卡完全一致。
+       · {用神策略} 由「格局 → 病药 → 扶抑」三句合成，句句以「用」起，重句自动去重。
+           格局句：用{格神十神}{格局作用}，如「用食神泄秀生财」；
+           病药句：用{药之十神}{制|化}{病根十神}，如「用财制印」；
+           扶抑句：用{首取十神}{作用}，如「用官杀制身」。
+       · {旺衰结论} = 生扶来源 + 身强/身弱 + 日主五行旺衰。生扶来源优先取天干之印（生我者），
+         次取天干之比劫（帮身），再退看地支本气有无印比之根。
+       · {大运} 取喜用之最前两位；{忌神运} 取全部忌神。 */
+  var ZJ_ZT_WORD = { strong: '身强', sstrong: '身强', mid: '中和', sweak: '身弱', weak: '身弱' };
+  var ZJ_ZT_TAIL = { strong: '旺', sstrong: '旺', mid: '平', sweak: '衰', weak: '衰' };
+  var ZJ_CAT_SHORT = { '比劫': '比劫', '印星': '印', '食伤': '食伤', '财星': '财', '官杀': '官杀' };
+  // 格局作用：q = 身强（身旺任之），r = 身弱（生扶缓之）
+  var ZJ_GEJU_ACT = {
+    '食伤': { q: '泄秀生财', r: '制化生身' }, '官杀': { q: '任杀立身', r: '化杀生身' },
+    '财':   { q: '任财生官', r: '帮身任财' }, '印':   { q: '破印裁身', r: '生身固本' }
+    // 「禄劫」无独立格神（建禄、月劫），改用「格局用神」直接成句，见 zongJieOf
+  };
+  var ZJ_FU_ACT = { '官杀': '制身', '食伤': '泄身', '财星': '耗身', '印星': '生身', '比劫': '帮身' };
+  // 调候句的作用词 & 身弱时描述「何者耗身」的寒燥字
+  var ZJ_WARM = { 亥: '暖局', 子: '暖局', 丑: '暖局', 巳: '解燥', 午: '解燥', 未: '解燥' };
+  var ZJ_COLD = { 亥: '寒', 子: '寒', 丑: '寒', 巳: '燥', 午: '燥', 未: '燥' };
+  var ZJ_TALENT = {
+    '食神': '才华', '伤官': '才气', '正财': '经营之才', '偏财': '开拓之能',
+    '正官': '操守', '七杀': '担当', '正印': '学识', '偏印': '悟性',
+    '比肩': '自主之力', '劫财': '协作之势'
+  };
+  var ZJ_LAND = {
+    '食伤': '把想法变成实际成果', '财星': '把资源变成持续收益',
+    '官杀': '在规则与责任中建立秩序', '印星': '以学习与积累做长久打底',
+    '比劫': '借合作与团队放大能量', '禄劫': '借合作与团队放大能量'
+  };
+
+  /* 地支特征：合会优先（三合 → 三会 → 半合 → 六合），无合则记重复（如「地支双子」）
+     ⚠️ 六合须「化神得月令」方作合化论。子丑合土而生在子月，土死于冬、水旺土荡，
+        实为「合而不化」，若径写「子丑合土」会误导；此时改为**列出四支原文**。 */
+  var ZJ_SAN_HE  = [[['申', '子', '辰'], '水'], [['亥', '卯', '未'], '木'], [['寅', '午', '戌'], '火'], [['巳', '酉', '丑'], '金']];
+  var ZJ_SAN_HUI = [[['寅', '卯', '辰'], '木'], [['巳', '午', '未'], '火'], [['申', '酉', '戌'], '金'], [['亥', '子', '丑'], '水']];
+  var ZJ_BAN_HE  = [['申', '子', '水'], ['子', '辰', '水'], ['亥', '卯', '木'], ['卯', '未', '木'],
+                    ['寅', '午', '火'], ['午', '戌', '火'], ['巳', '酉', '金'], ['酉', '丑', '金']];
+  var ZJ_LIU_HE  = [['子', '丑', '土'], ['寅', '亥', '木'], ['卯', '戌', '火'], ['辰', '酉', '金'], ['巳', '申', '水'], ['午', '未', '土']];
+  var ZJ_NUM = { 2: '双', 3: '三', 4: '四' };
+
+  function zhiFeatureOf(cols, monthZhi) {
+    var zhis = cols.map(function (c) { return c.zhi; });
+    var set = {};
+    zhis.forEach(function (z) { if (z) set[z] = 1; });
+    function hasAll(arr) { return arr.every(function (z) { return !!set[z]; }); }
+    var i;
+    for (i = 0; i < ZJ_SAN_HE.length; i++) {
+      if (hasAll(ZJ_SAN_HE[i][0])) return '地支' + ZJ_SAN_HE[i][0].join('') + '合' + ZJ_SAN_HE[i][1] + '局';
+    }
+    for (i = 0; i < ZJ_SAN_HUI.length; i++) {
+      if (hasAll(ZJ_SAN_HUI[i][0])) return '地支三会' + ZJ_SAN_HUI[i][1] + '局';
+    }
+    for (i = 0; i < ZJ_BAN_HE.length; i++) {
+      if (set[ZJ_BAN_HE[i][0]] && set[ZJ_BAN_HE[i][1]]) {
+        return '地支' + ZJ_BAN_HE[i][0] + ZJ_BAN_HE[i][1] + '半合' + ZJ_BAN_HE[i][2] + '局';
+      }
+    }
+    var mwx = ZHI_WX[monthZhi] || '';
+    var liuFound = false, liuHua = false, liuTxt = '';
+    for (i = 0; i < ZJ_LIU_HE.length; i++) {
+      if (!(set[ZJ_LIU_HE[i][0]] && set[ZJ_LIU_HE[i][1]])) continue;
+      liuFound = true;
+      var hua = ZJ_LIU_HE[i][2];
+      if (hua === mwx || SHENG[mwx] === hua) {          // 化神得月令 → 作合化论
+        liuHua = true;
+        liuTxt = '地支' + ZJ_LIU_HE[i][0] + ZJ_LIU_HE[i][1] + '合' + hua;
+        break;
+      }
+    }
+    if (liuHua) return liuTxt;
+
+    var listed = '地支' + zhis.join('');
+    if (liuFound) return listed;                        // 有合而不化 → 列出四支，不下「合化」断语
+    var cnt = {}, order = [];
+    zhis.forEach(function (z) {
+      if (!z) return;
+      if (cnt[z] === undefined) { cnt[z] = 0; order.push(z); }
+      cnt[z]++;
+    });
+    var dup = order.filter(function (z) { return cnt[z] >= 2; });
+    if (dup.length) {
+      return '地支' + dup.map(function (z) { return (ZJ_NUM[cnt[z]] || String(cnt[z])) + z; }).join('、');
+    }
+    return listed;
+  }
+
+  /* 生扶来源：天干之印（生我）优先，次天干比劫（帮身），再退地支本气之根 */
+  function shengFuOf(dayGan, cols) {
+    var yin = [], bi = [];
+    cols.forEach(function (c) {
+      if (c.key === 'day') return;
+      var s = shiShen(dayGan, c.gan);
+      if (s === '正印' || s === '偏印') yin.push(c.gan);
+      else if (s === '比肩' || s === '劫财') bi.push(c.gan);
+    });
+    function label(arr, word) {
+      return arr.map(function (g) { return g + GAN_WX[g]; }).join('、') + word;
+    }
+    if (yin.length) return label(yin, '生扶');
+    if (bi.length) return label(bi, '帮身');
+    var rooted = false;
+    cols.forEach(function (c) {
+      var ben = (HIDE[c.zhi] || [])[0];
+      if (!ben) return;
+      var s = shiShen(dayGan, ben);
+      if (s === '正印' || s === '偏印' || s === '比肩' || s === '劫财') rooted = true;
+    });
+    return rooted ? '地支通根' : '印比无援';
+  }
+
+  function zongJieOf(o) {
+    var dayGan = o.dayGan, dayWx = o.dayWx, monthZhi = o.monthZhi, level = o.level;
+    var geJu = o.geJu, geJuYong = o.geJuYong, bing = o.bing || [], CAT_WX = o.CAT_WX || {};
+
+    // ---- 喜用 / 忌神（沿用综合裁决定序，退则用扶抑喜忌） ----
+    var xiArr = (o.xiArr && o.xiArr.length ? o.xiArr : (o.goodWxArr || [])).filter(Boolean);
+    var jiArr = (o.jiArr && o.jiArr.length ? o.jiArr : (o.badWxArr || [])).filter(Boolean);
+    var xiStr = xiArr.join(''), jiStr = jiArr.join('') || '—';
+
+    function wx2cat(w) {
+      var CATS = ['比劫', '印星', '食伤', '财星', '官杀'];
+      for (var i = 0; i < CATS.length; i++) { if (CAT_WX[CATS[i]] === w) return CATS[i]; }
+      return '';
+    }
+    function short(c) { return ZJ_CAT_SHORT[c] || c; }
+
+    // ---- 用神策略：格局 → 病药 → 扶抑 → 调候 ----
+    var clauses = [];
+    var isWeak = (level === 'weak' || level === 'sweak');
+    var gss = (geJu && geJu.picked) ? geJu.picked.ss
+      : (geJu && geJu.items && geJu.items[0] ? geJu.items[0].ss : '');
+    if (geJuYong) {
+      var act = ZJ_GEJU_ACT[geJuYong.cat];
+      if (geJuYong.cat === '食伤' && !geJuYong.qiang) {
+        // 食伤格身弱：取印星制食伤，写作「用土制水」这类五行短语
+        clauses.push('用' + CAT_WX['印星'] + '制' + CAT_WX['食伤']);
+      } else if (geJuYong.cat === '印' && geJuYong.qiang) {
+        // 印格身强：病在印重，取财破印。格神即病神，不能照「用{格神}{作用词}」的
+        // 句式写成「用偏印破印裁身」—— 主语与动作自相矛盾，故改用财星成句。
+        clauses.push('用' + short('财星') + '破印');
+      } else if (act && gss) {
+        clauses.push('用' + gss + (geJuYong.qiang ? act.q : act.r));
+      } else if (ZJ_FU_ACT[geJuYong.key]) {
+        // 建禄格 / 月劫格（无独立格神）：作用词落在「格局用神」上
+        clauses.push('用' + short(geJuYong.key) + ZJ_FU_ACT[geJuYong.key]);
+      }
+    }
+    bing.forEach(function (d) {
+      if (!d.yao || !d.yao.length) return;
+      var srcCat = d.srcCat || '', yaoWx = d.yao[0];
+      var yaoCat = wx2cat(yaoWx), srcWx = srcCat ? CAT_WX[srcCat] : '';
+      if (!yaoCat) return;
+      if (!srcCat) { clauses.push('用' + short(yaoCat) + '去病'); return; }
+      clauses.push('用' + short(yaoCat) + (KE[yaoWx] === srcWx ? '制' : '化') + short(srcCat));
+    });
+    var fc = o.firstCat || '';
+    if (isWeak) {
+      // 身弱扶抑固定取印、比两类（扶抑模型的 goodCats 即 [印星, 比劫]），故用「印比生扶」这一成语
+      clauses.push('用印比生扶');
+    } else if (fc && ZJ_FU_ACT[fc]) {
+      clauses.push('用' + short(fc) + ZJ_FU_ACT[fc]);
+    } else if (o.wxW) {
+      // 中和：无「首取」之十神，改扶全局最弱之五行
+      var weakWx = WX_LIST[0];
+      WX_LIST.forEach(function (w) { if ((o.wxW[w] || 0) < (o.wxW[weakWx] || 0)) weakWx = w; });
+      var wcat = wx2cat(weakWx);
+      if (wcat) clauses.push('用' + short(wcat) + '扶弱');
+    }
+    // 调候句：急迫度高、且该五行未被前面任一句提到时，补一句「用火暖局」
+    if (o.tiao && o.tiao.high) {
+      var warm = ZJ_WARM[monthZhi] || '';
+      o.tiao.shenArr.forEach(function (w) {
+        if (!warm) return;
+        if (clauses.some(function (c) { return c.indexOf(w) >= 0; })) return;
+        clauses.push('用' + w + warm);
+      });
+    }
+    var seenCl = {};
+    clauses = clauses.filter(function (c) { if (seenCl[c]) return false; seenCl[c] = 1; return true; });
+    if (!clauses.length) {                                   // 保底：绝不出现空策略
+      var bcat = wx2cat(xiArr[0] || '');
+      clauses.push('用' + short(bcat || '比劫') + '调燮全局');
+    }
+
+    // ---- 人生建议 ----
+    var advice = '';
+    var tss = gss || (geJu && geJu.items && geJu.items[0] ? geJu.items[0].ss : '');
+    if (tss) advice = '发挥' + tss + (ZJ_TALENT[tss] || '所长');
+    var land = (geJuYong && ZJ_LAND[geJuYong.cat]) || '';
+    if (land) advice += (advice ? '，' : '') + land;
+    if (!advice) {
+      advice = (level === 'strong' || level === 'sstrong') ? '顺势输出、借力合作，别把力气闷在自己身上'
+        : (level === 'weak' || level === 'sweak') ? '先借团队与师友之手站稳，再图进取'
+        : '运来则进、运缓则守，长期积累胜过一时爆发';
+    }
+
+    // ---- 拼装 ----
+    var head = [dayGan + dayWx + '日主，生' + monthZhi + '月'];
+    var zf = o.cols ? zhiFeatureOf(o.cols, monthZhi) : '';
+    if (zf) head.push(zf);
+    if (isWeak) {
+      /* 身弱：要说清「何者耗身」而非「何者生扶」—— 印比纵有一点生扶之力，
+         水旺金寒才是本局的主导，写成「戊土生扶」会给「有救」的错觉。 */
+      var worst = '';
+      /* 「何者耗身」按**扶抑忌神**论 —— 调候／病药所权取者（如子月之火、巳月之土）
+         字面上虽已入喜用，其「耗身」之性并未改变，仍应算在耗身者里。 */
+      var worstSrc = (o.badFuArr && o.badFuArr.length) ? o.badFuArr : (o.badWxArr || []);
+      worstSrc.forEach(function (w) {
+        if (!worst || (o.wxW[w] || 0) > (o.wxW[worst] || 0)) worst = w;
+      });
+      if (!worst && o.wxW) {
+        WX_LIST.forEach(function (w) { if (!worst || (o.wxW[w] || 0) > (o.wxW[worst] || 0)) worst = w; });
+      }
+      head.push((worst || '') + '旺' + dayWx + (ZJ_COLD[monthZhi] || '弱'));
+      head.push('身弱');
+    } else {
+      if (o.cols) head.push(shengFuOf(dayGan, o.cols));
+      head.push((ZJ_ZT_WORD[level] || '中和') + dayWx + (ZJ_ZT_TAIL[level] || '平'));
+    }
+
+    var dayun = xiArr.slice(0, 3).join('') || xiStr;
+    /* 忌神名单可能被诸法权取一空（喜用包揽五行），此时不能写「—旺时宜守」 */
+    var yunTail = jiArr.length
+      ? '行' + dayun + '运时较顺，' + jiStr + '旺时宜守。'
+      : '行' + dayun + '运时较顺，全局忌神不显，行运鲜有逆滞。';
+    return head.join('，') + '。' +
+      '喜' + xiStr + '，忌' + jiStr + '。' +
+      clauses.join('，') + '。' +
+      '人生关键在：' + advice + '。' +
+      yunTail +
+      '婚姻、财运宜晚不宜急，合作投资需谨慎。';
+  }
+
   /* ===================== 排盘 ===================== */
   function run() {
     clearErr();
 
-    var dateStr = $('#birthDate').value;
+    var dateStr = readBirthDate();
     var timeStr = $('#birthTime').value || '12:00';
     var useTS   = $('#trueSolar').checked;
     var gender  = document.querySelector('input[name="gender"]:checked').value;
     var sect    = parseInt(document.querySelector('input[name="sect"]:checked').value, 10) || 2;
 
-    if (!dateStr) { showErr('请先选择公历出生日期。'); return; }
+    if (!dateStr) { showErr('请先选择完整的出生年、月、日。'); return; }
     var L = lib();
     if (!L) { showErr('排盘库尚未加载完成，请稍候 1 秒后重试，或检查网络。'); return; }
 
@@ -572,6 +1475,12 @@
     var monthWx  = ZHI_WX[monthZhi];
     cols.forEach(function (c) { c.dishi = diShiOf(dayGan, c.zhi); });
 
+    // 月令取格
+    var geJu = geJuOf(dayGan, monthZhi, cols);
+
+    // 旺衰评分
+    var ws = wangShuaiScore(dayGan, dayWx, cols);
+
     /* --- 加权统计 --- */
     var same = 0, other = 0;
     var catW = { '比劫': 0, '印星': 0, '食伤': 0, '财星': 0, '官杀': 0 };
@@ -620,7 +1529,33 @@
     else if (KE[dayWx] === monthWx)    { adj = -0.05; lingText = '月令为财星耗身'; }
     else                               { adj = -0.08; lingText = '月令为官杀克身'; }
 
-    var score = Math.max(0.02, Math.min(0.98, rawRatio + adj));
+    /* 通根加成 ------------------------------------------------------------
+       上一步的「位置 × 藏干」加权是把地支力量平摊计算的，容易把「地支里的
+       本气通根」摊薄，从而低估日主的真实根基。传统判旺衰，除月令外最看重的
+       恰恰是日主在地支中的通根：
+         · 日支是日主的「坐支」，本气为日主同类即坐禄、坐刃，是最有力的帮身；
+         · 时支、年支的本气同类根次之；
+         · 本气为印星（生我）者，力再弱一档。
+       故在「得令」修正之外，再对通根单独加成。这样「失令但坐刃有根」的命局
+       （如壬水生寅月，坐子、时又见子）就不会被误判成身弱。 */
+    var rootBonus = 0, rootText = [];
+    cols.forEach(function (c) {
+      if (c.key === 'month') return;               // 月令已由「得令」项单独计权，避免重复
+      var benqi = (HIDE[c.zhi] || [])[0];
+      if (!benqi) return;
+      var rwx = GAN_WX[benqi];
+      var posW = (c.key === 'day') ? 0.12 : 0.06;  // 日支坐根权重最高
+      if (rwx === dayWx) {
+        rootBonus += posW;
+        rootText.push(c.zhi + '（本气' + rwx + '·同类根）');
+      } else if (SHENG[rwx] === dayWx) {
+        rootBonus += posW * 0.6;
+        rootText.push(c.zhi + '（印根）');
+      }
+    });
+    rootBonus = Math.min(rootBonus, 0.24);
+
+    var score = Math.max(0.02, Math.min(0.98, rawRatio + adj + rootBonus));
 
     var level, verdictText, verdictColor;
     if (score >= 0.62)      { level = 'strong';  verdictText = '身强';   verdictColor = '#c2601c'; }
@@ -711,35 +1646,164 @@
     var goodWxArr = catsToWx(goodOrder);
     var badWxArr  = catsToWx(badCats);
 
-    // 调候
-    var winterZhi = ['亥', '子', '丑'], summerZhi = ['巳', '午', '未'];
-    var tiaoWx = '', tiaoNote = '';
-    if (winterZhi.indexOf(monthZhi) >= 0) {
-      tiaoWx = '火';
-      if (wxW['火'] < totalAll * 0.12) {
-        tiaoNote = '生于' + monthZhi + '月，天寒地冻，命局火气偏弱（' + wxW['火'].toFixed(1) + ' 分），调候须见火暖局。';
-      } else {
-        tiaoNote = '生于' + monthZhi + '月，寒气当令，虽有火气但仍宜留意温暖，调候取火。';
-      }
-    } else if (summerZhi.indexOf(monthZhi) >= 0) {
-      tiaoWx = '水';
-      if (wxW['水'] < totalAll * 0.12) {
-        tiaoNote = '生于' + monthZhi + '月，火炎土燥，命局水气偏弱（' + wxW['水'].toFixed(1) + ' 分），调候须见水润局。';
-      } else {
-        tiaoNote = '生于' + monthZhi + '月，暑气当令，燥气偏重，调候取水润泽。';
-      }
+    // 调候（日干 × 月支 查表）
+    var tiao = tiaoHouOf(dayGan, monthZhi);
+    var tiaoConflict = false;
+    var tiaoNote = '';
+    if (tiao.shen) {
+      tiaoNote = '生于' + monthZhi + '月（' + (TIAO_SEASON[monthZhi] || '') + '），调候用神取 ' + tiao.shen +
+        '，急迫度' + tiao.urgency + '。' + (TIAO_URG_DESC[tiao.urgency] || '');
     } else {
       tiaoNote = '生于' + monthZhi + '月，寒暖适中，调候无迫切之需，以扶抑用神为准。';
     }
-    var tiaoConflict = false;
-    if (tiaoWx) {
-      if (goodWxArr.indexOf(tiaoWx) >= 0) {
-        tiaoNote += '　调候所需之' + tiaoWx + '恰好落在喜用之内，用神更得力，行运见' + tiaoWx + '最为顺遂。';
-      } else {
+
+    var tiaoInGood = [], tiaoInBad = [], tiaoFirstWx = [], tiaoPromoted = [];
+    if (tiao.shenArr.length) {
+      tiao.shenArr.forEach(function (w) {
+        if (goodWxArr.indexOf(w) >= 0) tiaoInGood.push(w);
+        else if (badWxArr.indexOf(w) >= 0) tiaoInBad.push(w);
+      });
+      if (tiao.high && tiaoInBad.length) {
+        /* 调候急迫、而调候用神正落在扶抑忌神里 —— 由忌转喜（「权取」）。
+           寒暖之偏不解，纵有印比生扶亦无从受用，故此时调候优先于扶抑。
+           ⚠️ 只挪「喜忌显示」的位置，算分时不给它「扶抑喜用 +15」（见 tiaoOnly）——
+              否则调候神仅凭 +40 就会盖过真正的扶抑主用神，主次颠倒。 */
+        tiaoInBad.forEach(function (w) {
+          var k = badWxArr.indexOf(w);
+          if (k >= 0) badWxArr.splice(k, 1);
+          if (goodWxArr.indexOf(w) < 0) goodWxArr.push(w);
+        });
+        tiaoPromoted = tiaoInBad.slice();
+        tiaoInBad = [];
+        tiaoNote += '　调候急迫度高，故将 ' + tiaoPromoted.join('、') +
+          ' 由忌神权改为取用（附于喜用之末）—— 扶抑虽忌，寒暖不可不调。';
+      } else if (tiaoInBad.length && !tiaoInGood.length) {
         tiaoConflict = true;
-        tiaoNote += '　但' + tiaoWx + '属本局忌神，扶抑与调候存在出入：当以扶抑为主、兼顾调候，行运中年节气候也可稍作缓和。';
+        tiaoNote += '　但调候所取之 ' + tiaoInBad.join('、') + ' 属本局忌神，扶抑与调候存在出入：' +
+          '当以扶抑为主、兼顾调候，行运中年节气候也可稍作缓和。';
+      } else if (tiaoInGood.length) {
+        tiaoNote += '　调候所需之 ' + tiaoInGood.join('、') + ' 恰好落在喜用之内，用神更得力，行运见 ' +
+          tiaoInGood.join('、') + ' 最为顺遂。';
+      }
+      // 急迫度高时，调候用神优先级最高 —— 已落在喜用中的提至队首
+      if (tiao.high && tiaoInGood.length) {
+        tiaoFirstWx = tiaoInGood.slice();
+        goodWxArr = tiaoInGood.concat(goodWxArr.filter(function (w) { return tiaoInGood.indexOf(w) < 0; }));
       }
     }
+    var tiaoOnly = {};
+    tiaoPromoted.forEach(function (w) { tiaoOnly[w] = 1; });
+    /* 调候把某个五行由忌转喜后，`badCats` 里还留着它所属的类别，会让「喜用神」卡的
+       五行列表与十神说明各说一套，故此处把已转为喜用的类别从 badCats 中剔除。 */
+    if (tiaoPromoted.length) {
+      badCats = badCats.filter(function (c) { return goodWxArr.indexOf(CAT_WX[c]) < 0; });
+    }
+
+    // 病药
+    var bing = bingYaoOf({
+      dayGan: dayGan, cols: cols, catW: catW, ssW: ssW, totalW: totalW,
+      CAT_WX: CAT_WX, level: level, goodWxArr: goodWxArr, badWxArr: badWxArr
+    });
+
+    // 通关
+    var tong = tongGuanOf({
+      wxW: wxW, totalAll: totalAll, cols: cols,
+      goodWxArr: goodWxArr, badWxArr: badWxArr
+    });
+
+    // 综合裁决
+    var geJuYong = geJuYongOf(geJu ? geJu.name : '', level, CAT_WX);
+    var zh = zongHeOf({
+      tiao: tiao, geJuYong: geJuYong, tong: tong, bing: bing,
+      goodWxArr: goodWxArr, badWxArr: badWxArr, tiaoOnly: tiaoOnly
+    });
+    var zhCanon = [];
+    goodWxArr.concat(badWxArr, WX_LIST).forEach(function (w) { if (zhCanon.indexOf(w) < 0) zhCanon.push(w); });
+    var zhIdx = function (w) { return zhCanon.indexOf(w); };
+    var zhByRole = function (role) {
+      var a = zh.list.filter(function (r) { return r.role === role; });
+      if (role === '忌神' || role === '仇神') a.sort(function (x, y) { return x.score - y.score || zhIdx(x.wx) - zhIdx(y.wx); });
+      else a.sort(function (x, y) { return y.score - x.score || zhIdx(x.wx) - zhIdx(y.wx); });
+      return a;
+    };
+    var zhOrder = zhByRole('主用神').concat(zhByRole('喜神'), zhByRole('忌神'), zhByRole('仇神'), zhByRole('闲神'));
+    var zhNames = function (role) {
+      return zhByRole(role).map(function (r) { return r.wx; }).join('、');
+    };
+
+    /* ===================== 喜忌归一 =====================
+       扶抑是骨架，调候／病药／通关／格局是权变。五路打分之后，某个五行可能被裁决判到
+       扶抑的对立面 —— 于是「喜用神·忌神」卡按扶抑说话，裁决卡按综合说话，同一个字一边
+       列「喜」一边列「忌」，总结句更是两边都写。故此处把两张列表收敛为互斥的一份，
+       一律以裁决结果为准，并把转置的缘由留下来，在卡上注明。 */
+    var fuGood = goodWxArr.slice(), fuBad = badWxArr.slice();   // 归一前的喜忌名单（含调候权取）
+    var wxOfCat = {}, catOfWx = {};
+    ['比劫', '印星', '食伤', '财星', '官杀'].forEach(function (c) {
+      if (!CAT_WX[c]) return;
+      wxOfCat[c] = CAT_WX[c];
+      catOfWx[CAT_WX[c]] = c;
+    });
+    var ord = [], pushW = function (w) { if (w && ord.indexOf(w) < 0) ord.push(w); };
+    pushW(zh.main);                                   // 主用神必在喜用之首
+    if (tiao.high) tiaoInGood.forEach(pushW);         // 调候急迫者紧随其后
+    fuGood.forEach(pushW);
+    fuBad.forEach(pushW);
+    var xiNew = [], jiNew = [], xiUp = [], jiDown = [], xiWeak = [];
+    ord.forEach(function (w) {
+      var inGood = fuGood.indexOf(w) >= 0, role = zh.roles[w];
+      if (role === '主用神' || role === '喜神') { xiNew.push(w); if (!inGood) xiUp.push(w); }
+      else if (role === '忌神') { jiNew.push(w); if (inGood) jiDown.push(w); }
+      else if (inGood) { xiNew.push(w); } else { jiNew.push(w); }   // 仇神／闲神仍从扶抑
+    });
+    function zhRowOf(w) {
+      var a = zh.list.filter(function (r) { return r.wx === w; });
+      return a[0] || null;
+    }
+    function upWhy(w) {
+      var row = zhRowOf(w);
+      if (row) {
+        var pos = row.items.filter(function (it) { return it.v > 0; })
+          .sort(function (a, b) { return b.v - a.v; })[0];
+        if (pos) return pos.label;
+      }
+      return '综合裁决所用';
+    }
+    /* 克破只减力、不改喜忌：被克破的扶抑喜用仍是喜神（+15 − 12 = +3），
+       此处单独记一笔，好在喜用卡上注明「力量打折、不宜倚为主用神」。 */
+    xiNew.forEach(function (w) {
+      var row = zhRowOf(w);
+      if (row && row.items.some(function (it) { return it.label.indexOf('克破主用神') >= 0; })) xiWeak.push(w);
+    });
+    goodWxArr = xiNew;
+    badWxArr  = jiNew;
+    goodCats  = xiNew.map(function (w) { return catOfWx[w]; }).filter(Boolean);
+    badCats   = jiNew.map(function (w) { return catOfWx[w]; }).filter(Boolean);
+
+    var gdExtra = '', reconNote = '';
+    if (xiUp.length) {
+      var upTxt = xiUp.map(function (w) { return w + '（' + upWhy(w) + '）'; }).join('、');
+      gdExtra += '　※ ' + upTxt + ' 属扶抑忌神，因调候、病药诸法所急，一并取用，附于喜用之末。';
+      reconNote += '另取 ' + upTxt + '，虽属扶抑忌神，而所急者在彼；';
+    }
+    if (xiWeak.length) {
+      var wkTxt = xiWeak.map(function (w) {
+        var row = zhRowOf(w);
+        return w + '（' + (row ? (row.score > 0 ? '+' : '') + row.score : '') + '）';
+      }).join('、');
+      gdExtra += '　※ ' + wkTxt + ' 克破主用神，力量打折 —— 仍列喜神，惟不宜倚为主用神（减力而不改喜忌）。';
+      reconNote += wkTxt + '虽克破主用神，仍列喜神而力量打折；';
+    }
+    if (jiDown.length) {
+      gdExtra += '　※ ' + jiDown.join('、') + ' 本为扶抑喜用，然诸法罚分已压至负分，故暂列忌神。';
+      reconNote += jiDown.join('、') + '本为扶抑喜用，然被罚分压至负分，暂列忌；';
+    }
+    /* 极少数命例：扶抑所忌的几个字全被调候／病药取走（如冬月丙火，调候所取之木火
+       恰是扶抑所忌），忌神一栏便空了。这不是「全局无病」，须说明白，免得读者以为漏算。 */
+    if (!jiNew.length) {
+      gdExtra += '　※ 扶抑所忌之字已尽为调候／病药所取，忌神一栏遂空 —— 此非全局无病，' +
+        '而是所急者在寒暖与流通，不在偏旺；取用时仍宜微用，不可过补。';
+    }
+    var badWxTxt = badWxArr.length ? badWxArr.join('、') : '—';
 
     /* ===================== 渲染 ===================== */
     var goodSet = {}, badSet = {};
@@ -805,6 +1869,26 @@
     });
     $('#pillars').innerHTML = html;
 
+    // 月令取格
+    if (geJu) {
+      var chosen = geJu.picked || geJu.items[0];
+      $('#gejuBox').innerHTML = '<span class="v" style="color:#5a48b8">' + geJu.name + '</span>' +
+        '<span class="n">' + geJu.short + '</span>';
+      $('#gejuChips').innerHTML = geJu.items.map(function (it) {
+        var isChosen = (chosen === it);
+        var tag = isChosen ? '· 取此为格'
+          : (it.tou ? (IS_BIJIE[it.ss] ? '· 透天干但属比劫，跳过' : '· 透' + it.touPos)
+                    : '· 不透');
+        return '<span class="chip' + (isChosen ? ' first' : '') + '"><b>' + it.gan + '</b>' +
+          it.rank + ' · ' + it.ss + tag + '</span>';
+      }).join('');
+      $('#gejuNote').innerHTML = geJu.basis;
+    } else {
+      $('#gejuBox').innerHTML = '<span class="n">月支数据缺失，无法取格。</span>';
+      $('#gejuChips').innerHTML = '';
+      $('#gejuNote').innerHTML = '';
+    }
+
     // 五行条
     var maxW = Math.max.apply(null, WX_LIST.map(function (w) { return wxW[w]; })) || 1;
     var barsHtml = '';
@@ -829,18 +1913,49 @@
     $('#pin').style.left = 'calc(' + (score * 100) + '% - 2px)';
     $('#flags').innerHTML =
       '<span class="flag ' + (deLing ? 'on' : '') + '">' + (deLing ? '✓ ' : '✕ ') + '得令（' + lingText + '）</span>' +
-      '<span class="flag ' + (deDi ? 'on' : '') + '">' + (deDi ? '✓ ' : '✕ ') + '得地（地支有根）</span>' +
+      '<span class="flag ' + (deDi ? 'on' : '') + '">' + (deDi ? '✓ ' : '✕ ') + '得地（' + (rootText.length ? rootText.join('、') : '地支无同类根') + '）</span>' +
       '<span class="flag ' + (deShi ? 'on' : '') + '">' + (deShi ? '✓ ' : '✕ ') + '得势（天干帮扶 ' + ganHelp + ' 个）</span>';
-    $('#scoreNote').innerHTML = '判定方式：先按位置与藏干加权，统计「同类（比劫、印星）」与「异类（食伤、财星、官杀）」的力量比，再依月令得失做修正。' +
+    $('#scoreNote').innerHTML = '判定方式：先按位置与藏干加权，统计「同类（比劫、印星）」与「异类（食伤、财星、官杀）」的力量比；再依月令得失修正；最后补入日主的通根加成（地支本气同类根，以日支坐禄坐刃权重最高）。' +
       '扶抑比 ≥ 62% 为身强、54%~62% 偏强、46%~54% 中和、38%~46% 偏弱、< 38% 为身弱。';
 
-    // 喜忌
+    // 旺衰评分（百分制）
+    $('#wsVerdict').innerHTML =
+      '<span class="v" style="color:' + ws.color + '">' + ws.verdict + '</span>' +
+      '<span class="n">总分 ' + ws.total.toFixed(1) + ' 分　·　基础分构成：得令 40、得地 25/15/8、得生 15、得助 15</span>';
+
+    var wsHtml = '<div class="wsgrid">' +
+      '<span class="h">项目</span><span class="h n">基础</span><span class="h n">系数</span><span class="h s">得分</span>';
+    ws.rows.forEach(function (r) {
+      var coef = r.factor === 1 ? '×1.0'
+        : (r.factor < 0 ? '−' + Math.round(Math.abs(r.factor) * 100) + '%' : '×' + r.factor.toFixed(1));
+      wsHtml += '<span class="it"><b>' + r.item + '</b></span>' +
+        '<span class="n">' + r.base + '</span>' +
+        '<span class="n">' + coef + '</span>' +
+        '<span class="s">' + (r.base * r.factor).toFixed(1) + '</span>' +
+        '<span class="wnote">' + r.note + '</span>';
+    });
+    wsHtml += '<span class="it sum">合计</span><span class="n sum"></span><span class="n sum"></span>' +
+      '<span class="s sum">' + ws.total.toFixed(1) + '</span></div>';
+    $('#wsTable').innerHTML = wsHtml;
+
+    var wsNote = '判定：总分 &gt; ' + WS_STRONG + ' 为身强、' + WS_WEAK + '–' + WS_STRONG + ' 为中和、&lt; ' + WS_WEAK + ' 为身弱；' +
+      '总分 ≥ ' + WS_CONG_STRONG + ' 论从强、≤ ' + WS_CONG_WEAK + ' 论从弱。';
+    if (ws.special) wsNote += '本局总分落在「' + ws.special + '」区间，若不作特殊格处理则按分数为' + ws.baseVerdict + '。';
+    wsNote += '计分口径：得地只计年支／日支／时支中「日主同类」的藏干根（月支已归得令，不重复计；印根不计入得地，印只从天干以得生体现）；' +
+      '天干生扶按距离折算 —— 紧贴（月干、时干）×' + WS_F_TIGHT.toFixed(1) + '、隔干（年干）×' + WS_F_GAP.toFixed(1) +
+      '、远干 ×' + WS_F_FAR.toFixed(1) + '（远干留给大运流年用）。';
+    $('#wsNote').innerHTML = wsNote;
+
+    // 喜忌（已按「喜忌归一」收敛，与综合裁决卡、总结句同一份名单）
     $('#goodWx').textContent = goodWxArr.join('、');
-    $('#goodDesc').textContent = goodOrder.map(function (c) { return CAT_UNIT[c]; }).join('、') +
-      '。' + (firstCat ? '首取' + firstCat + '（' + CAT_WX[firstCat] + '）。' : '') + reason;
-    $('#badWx').textContent = badWxArr.join('、');
-    $('#badDesc').textContent = '忌神为 ' + badCats.map(function (c) { return CAT_UNIT[c]; }).join('、') +
-      '，逢之易生阻滞、耗损或压力，行运遇之宜守不宜进。';
+    var firstShown = (firstCat && goodCats.indexOf(firstCat) >= 0) ? firstCat : (catOfWx[goodWxArr[0]] || '');
+    $('#goodDesc').textContent = goodCats.map(function (c) { return CAT_UNIT[c]; }).join('、') +
+      '。' + (firstShown ? '首取' + firstShown + '（' + CAT_WX[firstShown] + '）。' : '') + reason;
+    $('#badWx').textContent = badWxTxt;
+    $('#badDesc').textContent = badCats.length
+      ? '忌神为 ' + badCats.map(function (c) { return CAT_UNIT[c]; }).join('、') +
+        '，逢之易生阻滞、耗损或压力，行运遇之宜守不宜进。'
+      : '本局扶抑所忌之字已尽为调候／病药所取，故不另立忌神 —— 行运顺逆行，仍以「微用、不过补」为度。';
 
     // 喜用干支
     var goodGzChips = [], seenGood = {};
@@ -869,7 +1984,158 @@
     });
     $('#ssChips').innerHTML = ssHtml;
 
-    $('#tiaohou').innerHTML = '<b style="color:var(--text)">调候</b>　' + tiaoNote;
+    // 调候
+    var tiaoColor = tiao.urgency === '高' ? '#c0392b' : (tiao.urgency === '中' ? '#d08028' : '#5a6675');
+    $('#tiaoVerdict').innerHTML =
+      '<span class="v" style="color:' + tiaoColor + '">' + (tiao.shen || '—') + '</span>' +
+      '<span class="n">调候用神　·　急迫度 ' + tiao.urgency +
+      (tiao.shen ? '　·　' + dayGan + '日主生于' + monthZhi + '月（' + (TIAO_SEASON[monthZhi] || '') + '）' : '') + '</span>';
+
+    var tiaoChipsHtml = '';
+    if (tiao.shenArr.length) {
+      tiao.shenArr.forEach(function (w, i) {
+        tiaoChipsHtml += '<span class="chip' + (i === 0 ? ' first' : '') + '"><b>' + w + '</b>' +
+          (i === 0 ? '主用神' : '辅用神') + '</span>';
+      });
+      tiaoChipsHtml += '<span class="chip">急迫度<b>' + tiao.urgency + '</b></span>';
+    } else {
+      tiaoChipsHtml = '<span class="chip">本局调候不急，以扶抑用神为准</span>';
+    }
+    $('#tiaoChips').innerHTML = tiaoChipsHtml;
+
+    $('#tiaoRow').innerHTML = TIAO_ZHI.map(function (z) {
+      var v = (tiao.row && tiao.row[z]) || '—';
+      return '<span class="chip' + (z === monthZhi ? ' first' : '') + '"><b>' + z + '</b>' + v + '</span>';
+    }).join('');
+
+    $('#tiaoTip').innerHTML = tiaoNote +
+      '　<span style="color:var(--sub)">模型口径：以月令寒暖燥湿为主、参日干五行定辅。' +
+      '亥子丑／巳午未为冬夏之正，寒暖偏极，故急迫度为「高」；寅卯申酉次之，为「中」；辰戌为四季土月、寒暖过渡，为「低」。' +
+      '急迫度为「高」时调候用神优先级最高，其中已落在喜用之内者会提至喜用之首。</span>';
+
+    if (tiaoFirstWx.length) {
+      var gd = $('#goodDesc');
+      gd.textContent = gd.textContent + '　调候急迫，故将调候用神 ' + tiaoFirstWx.join('、') + ' 提至喜用前列。';
+    }
+    if (tiaoPromoted.length) {
+      var gd2 = $('#goodDesc');
+      gd2.textContent = gd2.textContent + '　调候急迫而 ' + tiaoPromoted.join('、') +
+        ' 本属扶抑忌神，权改为取用，附于喜用之末 —— 扶抑虽忌，寒暖不可不调（不计扶抑喜用分，只以调候取之）。';
+    }
+    if (gdExtra) {
+      var gd3 = $('#goodDesc');
+      gd3.textContent = gd3.textContent + gdExtra;
+    }
+
+    // 病药
+    if (bing.length) {
+      var allYao = [];
+      bing.forEach(function (d) {
+        d.yao.concat(d.fu).forEach(function (w) { if (allYao.indexOf(w) < 0) allYao.push(w); });
+      });
+      $('#bingVerdict').innerHTML =
+        '<span class="v" style="color:#a8352a">' + bing.length + ' 病</span>' +
+        '<span class="n">' + bing.map(function (d) { return d.name; }).join('、') +
+        '　·　药：' + allYao.join('、') + '</span>';
+
+      $('#bingList').innerHTML = bing.map(function (d) {
+        var chips = '<span class="chip bad"><b>' + d.name + '</b>病</span>';
+        d.yao.forEach(function (w, i) {
+          chips += '<span class="chip good"><b>' + w + '</b>' + (i === 0 ? '主药' : '药') + '</span>';
+        });
+        d.fu.forEach(function (w) { chips += '<span class="chip"><b>' + w + '</b>辅药</span>'; });
+        if (d.yaoInBad.length && !d.yaoInGood.length) {
+          chips += '<span class="chip">药落忌神，当以药为先</span>';
+        }
+        return '<div style="margin-top:14px">' +
+          '<div class="chips">' + chips + '</div>' +
+          '<div class="hint">' + d.why + '</div>' +
+          '</div>';
+      }).join('');
+    } else {
+      $('#bingVerdict').innerHTML =
+        '<span class="v" style="color:#1f7a4a">无明显病</span>' +
+        '<span class="n">五行流通、未见显著偏枯，无须刻意用药</span>';
+      $('#bingList').innerHTML = '';
+    }
+
+    $('#bingTip').innerHTML =
+      '判定口径：类别「旺」为占十神总力 ≥ ' + BING_Q + '%、「弱」为 &lt; ' + BING_R + '%；' +
+      '枭神夺食另设下限 ' + BING_XIAO + '%（须偏印透干且财星不透，财透则病解）；伤官见官须伤官 ≥ ' + BING_SHANG + '%。' +
+      '「药」即制病之五行 —— 财破印、官杀制比劫、印化官杀、比劫帮身、食伤通关，各随其病。' +
+      '药与扶抑喜忌若不一致，急病当先用药，病去再论扶抑。';
+
+    // 通关
+    if (tong.length) {
+      var tongList = [];
+      tong.forEach(function (d) { if (tongList.indexOf(d.tong) < 0) tongList.push(d.tong); });
+      $('#tongVerdict').innerHTML =
+        '<span class="v" style="color:#5a48b8">' + tong.length + ' 组交战</span>' +
+        '<span class="n">' + tong.map(function (d) { return d.ke + ' × ' + d.bei; }).join('、') +
+        '　·　通关用神：' + tongList.join('、') + '</span>';
+      $('#tongList').innerHTML = tong.map(function (d) {
+        var chips = '<span class="chip"><b>' + d.ke + '</b>×</span>' +
+          '<span class="chip"><b>' + d.bei + '</b>交战</span>' +
+          '<span class="chip first"><b>' + d.tong + '</b>通关用神</span>' +
+          (d.tongInBad ? '<span class="chip">通关神落扶抑忌神：降权为 +12，仍可解战，不宜倚为主用神</span>' : '');
+        return '<div style="margin-top:14px">' +
+          '<div class="chips">' + chips + '</div>' +
+          '<div class="hint">' + d.why + '</div>' +
+          '</div>';
+      }).join('');
+    } else {
+      $('#tongVerdict').innerHTML =
+        '<span class="v" style="color:#1f7a4a">无交战</span>' +
+        '<span class="n">五行未见两行对峙相克，无须通关</span>';
+      $('#tongList').innerHTML = '';
+    }
+
+    $('#tongTip').innerHTML =
+      '判定口径：五组相克各有一通关神 —— 金克木取水、水克火取木、土克水取金、火克金取土、木克土取火（即相生链的中间一环）。' +
+      '交战须三条同时成立：① 两行在天干同时透出；② 两行五行力量占比都 ≥ ' + TONG_T + '%；③ 天干五合、地支六合未把其中一方合去。' +
+      '相生之两行（如水生木）本已流通，不构成交战。「通关五行自身已旺」不作已化解论 —— 战象成于天干，须有神引通方解。' +
+      '<b>通关神若自身落在扶抑忌神中，则降权而不归零（+25 → +12）</b>：交战是客观矛盾，此字虽不理想，' +
+      '却是当下唯一能解战者，故仍留其解战之权，只是不至于被推为主用神；' +
+      '若其力弱，宜配合印比护身，方为稳当。';
+
+    // 综合裁决
+    (function renderZongHe() {
+      var roleCls = function (r) {
+        if (r === '主用神') return 'chip first';
+        if (r === '喜神') return 'chip good';
+        if (r === '忌神' || r === '仇神') return 'chip bad';
+        return 'chip';
+      };
+      var vparts = [];
+      ['喜神', '忌神', '仇神', '闲神'].forEach(function (r) {
+        var n = zhNames(r);
+        if (n) vparts.push(r + ' ' + n);
+      });
+      $('#zhVerdict').innerHTML =
+        '<span class="v" style="color:#5a48b8">主用神 ' + zh.main + '</span>' +
+        '<span class="n">' + vparts.join('　·　') + '</span>';
+
+      $('#zhList').innerHTML = zhOrder.map(function (r) {
+        var detail = r.items.length
+          ? r.items.map(function (it) { return '<span style="color:' + (it.v > 0 ? '#1f7a4a' : '#a8352a') + '">' +
+              (it.v > 0 ? '+' : '') + it.v + ' ' + it.label + '</span>'; }).join('　')
+          : '<span>无来源加分</span>';
+        return '<div style="margin-top:14px">' +
+          '<div class="chips">' +
+            '<span class="' + roleCls(r.role) + '"><b>' + r.wx + '</b>' + r.role + '</span>' +
+            '<span class="chip">得分<b>' + (r.score > 0 ? '+' : '') + r.score + '</b></span>' +
+          '</div>' +
+          '<div class="hint">' + detail + '</div>' +
+          '</div>';
+      }).join('');
+
+      $('#zhTip').innerHTML =
+        '计分：调候急迫（急迫度为「高」）且候选为调候用神 +40；格局用神 +30；通关用神 +25（通关神自身落扶抑忌神者降为 +12 —— 降权不归零，仍留其解战之权）；病药用神 +20；' +
+        '扶抑喜用 +15；扶抑忌神 −15；一神多用（命中两个以上加分来源）+10；克破主用神（候选克制本次最高分者）−12（只减其力，不改其喜忌）。' +
+        '判定：最高分者为主用神，其余正分为喜神，负分为忌神；得 0 分者，生忌神为仇神、否则为闲神。' +
+        '格局用神按「格局 + 日主强弱」定：食伤格身强取财、身弱取印；官杀格身强取官杀、身弱取印；' +
+        '财格身强取财、身弱取比劫；印格身强取财、身弱取印；禄劫格身强取官杀、身弱取比劫（中和归身强侧）。';
+    })();
 
     // 总结
     var seasonTxt = ({ '寅': '初春', '卯': '仲春', '辰': '暮春', '巳': '初夏', '午': '仲夏', '未': '暮夏',
@@ -886,16 +2152,57 @@
 
     if (level === 'strong' || level === 'sstrong') {
       p.push('<p><span class="lead">喜忌取用</span>：日主偏旺，宜「抑、泄、耗」而不宜再扶。喜用为 <em>' + goodWxArr.join('、') +
-        '</em>，忌 <em>' + badWxArr.join('、') + '</em>。' + reason + '行运或流年走到喜用之地，多主事业推进、机会落地；走到忌神之地，则易生争竞、破财、身心倦怠，宜守成、宜借力。</p>');
+        '</em>，忌 <em>' + badWxTxt + '</em>。' + reason + reconNote + '行运或流年走到喜用之地，多主事业推进、机会落地；走到忌神之地，则易生争竞、破财、身心倦怠，宜守成、宜借力。</p>');
     } else if (level === 'weak' || level === 'sweak') {
       p.push('<p><span class="lead">喜忌取用</span>：日主偏弱，宜「生扶」而不宜再克泄。喜用为 <em>' + goodWxArr.join('、') +
-        '</em>，忌 <em>' + badWxArr.join('、') + '</em>。' + reason + '行运见喜用则如得贵人、如添底气，事业多能借势而起；运走忌神则压力偏重，宜稳守本分、善待身体，切忌盲目扩张。</p>');
+        '</em>，忌 <em>' + badWxTxt + '</em>。' + reason + reconNote + '行运见喜用则如得贵人、如添底气，事业多能借势而起；运走忌神则压力偏重，宜稳守本分、善待身体，切忌盲目扩张。</p>');
     } else {
       p.push('<p><span class="lead">喜忌取用</span>：八字大体中和，属于较为平衡的命局，人生少有极端起落。取用偏向 <em>' + goodWxArr.join('、') +
-        '</em>，忌 <em>' + badWxArr.join('、') + '</em>。' + reason + '</p>');
+        '</em>，忌 <em>' + badWxTxt + '</em>。' + reason + reconNote + '</p>');
     }
 
-    p.push('<p><span class="lead">调候提示</span>：' + tiaoNote + (tiaoConflict ? '换言之，本局并非「缺什么补什么」那么简单，需在扶抑与寒暖之间取得平衡。' : '') + '</p>');
+    p.push('<p><span class="lead">调候提示</span>：' + (tiao.shen
+      ? '月令' + monthZhi + '，调候用神为 <em>' + tiao.shen + '</em>，急迫度<em>' + tiao.urgency + '</em>。' +
+        (TIAO_URG_DESC[tiao.urgency] || '')
+      : '月令' + monthZhi + '，寒暖适中，调候无迫切之需，以扶抑用神为准。') +
+      (tiaoConflict ? '扶抑与调候存在出入，本局并非「缺什么补什么」那么简单，需在扶抑与寒暖之间取得平衡。' : '') + '</p>');
+
+    if (bing.length) {
+      var byTxt = bing.map(function (d) {
+        return d.name + '（药：' + d.yao.concat(d.fu).join('、') + '）';
+      }).join('；');
+      p.push('<p><span class="lead">病药提示</span>：命局见 ' + byTxt + '。' +
+        '八字以「有病得药」为贵 —— 病是命局的偏枯之处，药即对症之五行；行运走药地则病去身安，' +
+        '运走忌神则病发而应事。故看吉凶，先看病之轻重与药之有无。</p>');
+    } else {
+      p.push('<p><span class="lead">病药提示</span>：命局未见明显偏枯之病，五行流通，无须刻意用药，行运顺其自然即可。</p>');
+    }
+
+    if (tong.length) {
+      var tgTxt = tong.map(function (d) {
+        return d.ke + '×' + d.bei + '（通关取' + d.tong + '）';
+      }).join('；');
+      p.push('<p><span class="lead">通关提示</span>：命局见 ' + tgTxt + '。' +
+        '两行相战不下，谁胜谁负皆伤和气，得通关之神从中引化，则' +
+        '「贪生忘克」——战者转而相生，反成一路流通之气。故通关之神得力时最善解围，行运见之，多主化解争端、打通关节；' +
+        '通关神若自身落在扶抑忌神中，则降权而不归零 —— 此字虽不理想，却是当下唯一能解战者，可用而不可倚，宜配合印比护身。</p>');
+    } else {
+      p.push('<p><span class="lead">通关提示</span>：命局未见两行对峙相克，五行自相流通，无须通关之神。</p>');
+    }
+
+    var zhVparts = [];
+    ['喜神', '忌神', '仇神', '闲神'].forEach(function (r) {
+      var n = zhNames(r);
+      if (n) zhVparts.push(r + '取 <em>' + n + '</em>');
+    });
+    p.push('<p><span class="lead">综合裁决</span>：把调候、格局、通关、病药、扶抑五路所需汇总打分后，' +
+      '主用神为 <em>' + zh.main + '</em>' + (zhVparts.length ? '，' + zhVparts.join('，') : '') + '。' +
+      '主用神是全局最得力的一个字，行运流年逢之最为顺遂；喜神辅之，忌神则相反；' +
+      '仇神生忌神、如助纣为虐；闲神于全局关系不大，可暂置不论。</p>');
+
+    p.push('<p class="hint" style="margin-top:6px">裁决得分：' + zhOrder.map(function (r) {
+      return r.wx + '(' + r.role + ' ' + (r.score > 0 ? '+' : '') + r.score + ')';
+    }).join('　') + '</p>');
 
     var finalAdvice = '';
     if (level === 'strong' || level === 'sstrong') finalAdvice = '自身能量偏足，最忌闷头硬扛。宜主动输出、交付成果，借合作、借规则、借平台来消化过旺的势头，反而更容易出成绩。';
@@ -903,10 +2210,33 @@
     else finalAdvice = '命局相对平衡，成败更多取决于选择与时机，宜顺势而为：运来则进，运缓则守，不追求极端爆发，长期积累会有稳定回报。';
 
     p.push('<p><span class="lead">一句话总结</span>：日主' + dayGan + dayWx + '，生于' + monthZhi + '月，' + verdictText +
-      '，喜 <em>' + goodWxArr.join('、') + '</em>、忌 <em>' + badWxArr.join('、') + '</em>' +
-      (tiaoWx ? '，兼需' + tiaoWx + '调候' : '') + '。' + finalAdvice + '</p>');
+      '，喜 <em>' + goodWxArr.join('、') + '</em>、忌 <em>' + badWxTxt + '</em>' +
+      (tiao.shen ? '，调候取' + tiao.shen + '（急迫度' + tiao.urgency + '）' : '') + '。' + finalAdvice + '</p>');
 
     $('#summaryBox').innerHTML = p.join('');
+
+    // 总结生成 —— 一段「命书」式总论（置于总结卡首位）
+    /* 喜/忌的顺序与「喜用神·忌神」卡完全一致：先出主用神，再按扶抑喜用的次序，
+       最后补综合裁决里另有出处的喜神。忌神同理。这样两张卡不会各说一套。 */
+    var zjXi = [], zjJi = [];
+    if (zh.main) zjXi.push(zh.main);
+    goodWxArr.forEach(function (w) { if (zjXi.indexOf(w) < 0) zjXi.push(w); });
+    zhByRole('喜神').forEach(function (r) { if (zjXi.indexOf(r.wx) < 0) zjXi.push(r.wx); });
+    badWxArr.forEach(function (w) { zjJi.push(w); });
+    zhByRole('忌神').forEach(function (r) { if (zjJi.indexOf(r.wx) < 0) zjJi.push(r.wx); });
+    /* 喜忌互斥兜底：经「喜忌归一」后两张名单本已互斥，此处再挡一道，
+       任何五行都不可能在同一个句子里既当喜用又当忌神。 */
+    zjXi = zjXi.filter(function (w) { return zjJi.indexOf(w) < 0 || goodWxArr.indexOf(w) >= 0; });
+    zjJi = zjJi.filter(function (w) { return zjXi.indexOf(w) < 0; });
+
+    var finalText = zongJieOf({
+      dayGan: dayGan, dayWx: dayWx, monthZhi: monthZhi, level: level, cols: cols,
+      geJu: geJu, geJuYong: geJuYong, bing: bing, firstCat: firstCat, CAT_WX: CAT_WX,
+      goodWxArr: goodWxArr, badWxArr: badWxArr, badFuArr: fuBad, wxW: wxW, tiao: tiao,
+      xiArr: zjXi, jiArr: zjJi
+    });
+    var fbEl = $('#finalBox');
+    if (fbEl) fbEl.innerHTML = finalText ? '<p>' + finalText + '</p>' : '';
 
     var adv = [
       { t: '方位', v: goodWxArr.map(function (w) { return WX_ADVICE[w] ? WX_ADVICE[w].dir : ''; }).filter(Boolean).join(' / ') },
@@ -953,6 +2283,48 @@
       }).catch(function () { return next(); });
     }
     return next();
+  }
+
+  /* ---------- 出生日期：年 / 月 / 日 三个下拉（手机端可直接选年份） ---------- */
+  function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }   // m 取 1~12
+
+  function fillRange(el, from, to) {
+    el.innerHTML = '';
+    for (var i = from; i <= to; i++) {
+      var o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = String(i);
+      el.appendChild(o);
+    }
+  }
+
+  function syncDays() {
+    var y = parseInt($('#birthYear').value, 10) || 1990;
+    var m = parseInt($('#birthMonth').value, 10) || 1;
+    var keep = parseInt($('#birthDay').value, 10) || 1;
+    var dim = daysInMonth(y, m);
+    if ($('#birthDay').options.length !== dim) fillRange($('#birthDay'), 1, dim);
+    $('#birthDay').value = String(Math.min(keep, dim));   // 如 2/30 自动收到 2/28 或 2/29
+  }
+
+  function readBirthDate() {
+    var y = $('#birthYear').value, m = $('#birthMonth').value, d = $('#birthDay').value;
+    if (!y || !m || !d) return '';
+    return y + '-' + pad2(parseInt(m, 10)) + '-' + pad2(parseInt(d, 10));
+  }
+
+  function initDate() {
+    var nowY = new Date().getFullYear();
+    // 上限放到 2100：既覆盖常规出生年，也能排未来年份（预产期、择日、教材命例）
+    fillRange($('#birthYear'), 1900, Math.max(nowY + 1, 2100));
+    fillRange($('#birthMonth'), 1, 12);
+    fillRange($('#birthDay'), 1, 31);
+    $('#birthYear').value = '1990';
+    $('#birthMonth').value = '6';
+    $('#birthDay').value = '15';
+    syncDays();
+    $('#birthYear').addEventListener('change', syncDays);
+    $('#birthMonth').addEventListener('change', syncDays);
   }
 
   /* ---------- 省 / 市 / 区县 三级联动 ---------- */
@@ -1019,6 +2391,7 @@
   }
 
   function boot() {
+    initDate();
     initArea();
     document.querySelector('input[name="gender"]').checked = true;
 
@@ -1047,7 +2420,7 @@
       });
     });
 
-    ['birthDate', 'birthTime'].forEach(function (id) {
+    ['birthYear', 'birthMonth', 'birthDay', 'birthTime'].forEach(function (id) {
       $('#' + id).addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { $('#go').click(); }
       });
